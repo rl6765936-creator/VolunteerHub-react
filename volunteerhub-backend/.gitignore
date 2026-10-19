@@ -5,3 +5,4 @@ coverage/
 *.log
 uploads/
 src/generated/
+setup/*.txt
