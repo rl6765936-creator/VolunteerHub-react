@@ -10,7 +10,15 @@ import {
   includeInactiveQuery,
   updateCategoryBody,
 } from '../modules/categories/categories.routes.js';
+import { approveBody, cancelBody, rejectBody } from '../modules/moderation/moderation.schemas.js';
 import { volunteerProfileBody } from '../modules/profiles/profile.routes.js';
+import {
+  adminListRequestsQuery,
+  createRequestBody,
+  listRequestsQuery,
+  myRequestsQuery,
+  updateRequestBody,
+} from '../modules/requests/requests.schemas.js';
 import {
   changePasswordBody,
   listUsersQuery,
@@ -30,6 +38,7 @@ interface Endpoint {
   body?: ZodType;
   query?: ZodObject;
   status?: number;
+  multipart?: boolean;
   /** Overrides the default access note. */
   description?: string;
 }
@@ -161,6 +170,141 @@ const endpoints: Endpoint[] = [
     body: updateCategoryBody,
   },
 
+  // Help requests
+  {
+    method: 'get',
+    path: `${P}/requests`,
+    tag: 'Help requests',
+    summary: 'Search approved help requests',
+    access: 'public',
+    query: listRequestsQuery,
+    description:
+      'Public. Only approved requests are listed (default `status=OPEN`). Addresses and contact details are never included.',
+  },
+  {
+    method: 'post',
+    path: `${P}/requests`,
+    tag: 'Help requests',
+    summary: 'Create a help request (starts as PENDING_REVIEW)',
+    access: 'user',
+    body: createRequestBody,
+    status: 201,
+  },
+  {
+    method: 'get',
+    path: `${P}/requests/{id}`,
+    tag: 'Help requests',
+    summary: 'Help request details',
+    access: 'public',
+    description:
+      'Approved requests are public. Pending or rejected ones are visible only to the owner, admins and users who made an offer (404 for everyone else). `privateDetails` (address and requester contact) is shown only to the owner, admins and the volunteer whose offer was accepted.',
+  },
+  {
+    method: 'patch',
+    path: `${P}/requests/{id}`,
+    tag: 'Help requests',
+    summary: 'Edit my request (only while OPEN)',
+    access: 'user',
+    body: updateRequestBody,
+    description:
+      'Owner only. Every field is material: a published request goes back to PENDING_REVIEW (`meta.reModeration`) and users with an active offer are notified.',
+  },
+  {
+    method: 'post',
+    path: `${P}/requests/{id}/cancel`,
+    tag: 'Help requests',
+    summary: 'Cancel a request (owner or admin)',
+    access: 'user',
+    body: cancelBody,
+    description:
+      'Pending offers are declined and every offerer is notified. Admin cancellations are audit-logged.',
+  },
+  {
+    method: 'post',
+    path: `${P}/requests/{id}/complete`,
+    tag: 'Help requests',
+    summary: 'Mark an in-progress request as completed (owner)',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/requests/{id}/history`,
+    tag: 'Help requests',
+    summary: 'Moderation and status history of a request and its offers (owner or admin)',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me/requests`,
+    tag: 'Help requests',
+    summary: 'My help requests, in every state',
+    access: 'user',
+    query: myRequestsQuery,
+  },
+
+  // Images
+  {
+    method: 'get',
+    path: `${P}/requests/{id}/attachments`,
+    tag: 'Images',
+    summary: 'List the images of a request',
+    access: 'public',
+    description: 'Same visibility as the request.',
+  },
+  {
+    method: 'post',
+    path: `${P}/requests/{id}/attachments`,
+    tag: 'Images',
+    summary: 'Upload an image (owner, while OPEN)',
+    access: 'user',
+    multipart: true,
+    status: 201,
+    description:
+      'JPEG, PNG or WebP detected from the file bytes, max 5 MB, max 5 per request. Adding an image to a published request sends it back to moderation.',
+  },
+  {
+    method: 'get',
+    path: `${P}/attachments/{id}/file`,
+    tag: 'Images',
+    summary: 'Download an image',
+    access: 'public',
+    description: 'Same visibility as the request (404 otherwise).',
+  },
+  {
+    method: 'delete',
+    path: `${P}/attachments/{id}`,
+    tag: 'Images',
+    summary: 'Remove an image (owner while OPEN, or admin)',
+    access: 'user',
+    status: 204,
+  },
+
+  // Admin: moderation of requests
+  {
+    method: 'get',
+    path: `${P}/admin/requests`,
+    tag: 'Admin: moderation',
+    summary: 'All help requests, e.g. the PENDING_REVIEW queue',
+    access: 'admin',
+    query: adminListRequestsQuery,
+  },
+  {
+    method: 'post',
+    path: `${P}/admin/requests/{id}/approve`,
+    tag: 'Admin: moderation',
+    summary: 'Approve and publish a pending request',
+    access: 'admin',
+    body: approveBody,
+  },
+  {
+    method: 'post',
+    path: `${P}/admin/requests/{id}/reject`,
+    tag: 'Admin: moderation',
+    summary: 'Reject a pending request or take down a published one',
+    access: 'admin',
+    body: rejectBody,
+  },
+
   // Admin: users
   {
     method: 'get',
@@ -204,7 +348,7 @@ export function buildOpenApiDocument() {
   for (const endpoint of endpoints) {
     const status = endpoint.status ?? 200;
     const pathParams = params(endpoint.path);
-    const hasInput = Boolean(pathParams ?? endpoint.query ?? endpoint.body);
+    const hasInput = Boolean(pathParams ?? endpoint.query ?? endpoint.body ?? endpoint.multipart);
     const responses: RouteConfig['responses'] = {
       [status]: {
         description: status === 204 ? 'No content' : 'Success. Body: `{ data, meta? }`.',
@@ -252,6 +396,16 @@ export function buildOpenApiDocument() {
         ...(endpoint.query && { query: endpoint.query }),
         ...(endpoint.body && {
           body: { required: true, content: { 'application/json': { schema: endpoint.body } } },
+        }),
+        ...(endpoint.multipart && {
+          body: {
+            required: true,
+            content: {
+              'multipart/form-data': {
+                schema: z.object({ file: z.string().meta({ format: 'binary' }) }),
+              },
+            },
+          },
         }),
       },
       responses,

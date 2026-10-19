@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { AppDependencies } from '../../deps.js';
 import { AppError, ErrorCodes, errors } from '../../lib/errors.js';
 import { parseId, queryBoolean, text } from '../../lib/http.js';
-import { isUniqueViolation } from '../../lib/prisma.js';
+import { isUniqueViolation, type DbClient } from '../../lib/prisma.js';
 import { currentUser, isAdmin } from '../../middleware/auth.js';
 import { AuditActions, writeAudit } from '../audit/audit.service.js';
 
@@ -104,11 +104,8 @@ export function createCategoriesAdminRouter({ prisma }: AppDependencies): Router
 }
 
 /** Throws 400 unless the category exists and is active (new content needs an active one). */
-export async function assertActiveCategory(
-  prisma: AppDependencies['prisma'],
-  categoryId: string,
-): Promise<void> {
-  const category = await prisma.category.findUnique({
+export async function assertActiveCategory(db: DbClient, categoryId: string): Promise<void> {
+  const category = await db.category.findUnique({
     where: { id: categoryId },
     select: { isActive: true },
   });

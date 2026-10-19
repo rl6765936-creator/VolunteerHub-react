@@ -2,6 +2,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import type { Express } from 'express';
+import request from 'supertest';
 import { createApp } from '../../src/app.js';
 import { loadEnv, type Env } from '../../src/config/env.js';
 import type { UserRole } from '../../src/generated/prisma/enums.js';
@@ -109,3 +110,52 @@ export async function createCategory(name?: string) {
     data: { name: name ?? `Category ${categoryCounter}`, slug: `category-${categoryCounter}` },
   });
 }
+
+export const futureDate = (days = 7, hour = 9) => {
+  const date = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  date.setUTCHours(hour, 0, 0, 0);
+  return date;
+};
+
+export interface RequestOptions {
+  approve?: TestUser;
+  body?: Record<string, unknown>;
+}
+
+/** Creates a help request through the API (as the owner), optionally approving it. */
+export async function createHelpRequest(
+  app: Express,
+  owner: TestUser,
+  categoryId: string,
+  options: RequestOptions = {},
+): Promise<string> {
+  const res = await request(app)
+    .post('/api/requests')
+    .set(owner.auth)
+    .send({
+      title: 'Groceries for an elderly neighbour',
+      description: 'Weekly shopping for a neighbour who cannot leave home.',
+      categoryId,
+      region: 'Jerusalem',
+      addressDetails: 'Herzl 10, apartment 4',
+      ...options.body,
+    });
+  if (res.status !== 201) {
+    throw new Error(`createHelpRequest failed: ${res.status} ${JSON.stringify(res.body)}`);
+  }
+  const id = res.body.data.id as string;
+  if (options.approve) {
+    const approved = await request(app)
+      .post(`/api/admin/requests/${id}/approve`)
+      .set(options.approve.auth)
+      .send({});
+    if (approved.status !== 200) throw new Error(`approve failed: ${approved.status}`);
+  }
+  return id;
+}
+
+/** A 1x1 PNG. */
+export const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  'base64',
+);
