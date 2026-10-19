@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { documentedEndpoints } from '../src/docs/openapi.js';
-import { buildApp } from './helpers/app.js';
+import { buildApp, testEnv } from './helpers/setup.js';
 
 describe('GET /api/health', () => {
   it('returns 200 with a status payload', async () => {
@@ -14,6 +14,31 @@ describe('GET /api/health', () => {
     });
     expect(typeof res.body.data.uptimeSeconds).toBe('number');
     expect(Number.isNaN(Date.parse(res.body.data.timestamp as string))).toBe(false);
+  });
+});
+
+describe('GET /api/health/ready', () => {
+  it('reports the database as reachable', async () => {
+    const res = await request(buildApp()).get('/api/health/ready');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ data: { status: 'ready', database: 'ok' } });
+  });
+
+  it('returns 503 when the database is unreachable', async () => {
+    const { createApp } = await import('../src/app.js');
+    const { createLogger } = await import('../src/lib/logger.js');
+    const { createPrisma } = await import('../src/lib/prisma.js');
+    const env = testEnv({ DATABASE_URL: 'postgresql://nobody:wrong@127.0.0.1:1/none_test' });
+    const prisma = createPrisma(env.DATABASE_URL);
+    const app = createApp({ env, logger: createLogger('silent'), prisma });
+    try {
+      const res = await request(app).get('/api/health/ready');
+      expect(res.status).toBe(503);
+      expect(res.body).toEqual({ data: { status: 'unavailable', database: 'unreachable' } });
+    } finally {
+      await prisma.$disconnect();
+    }
   });
 });
 

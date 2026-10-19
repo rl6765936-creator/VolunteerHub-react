@@ -1,0 +1,349 @@
+// VolunteerHub data model. 11 entities, as approved in the revised plan.
+// Two roles only (USER, ADMIN); ownership decides who may manage a request or a task.
+// Publication moderation and lifecycle (execution) status are separate fields.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+}
+
+/// Publication moderation, shared by help requests and volunteer tasks.
+enum ModerationStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum HelpRequestStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum HelpOfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
+enum TaskStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+/// Registration is automatic, so there is no pending state.
+enum RegistrationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum Weekday {
+  SUN
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+}
+
+enum HistoryEntityType {
+  HELP_REQUEST
+  HELP_OFFER
+  VOLUNTEER_TASK
+  TASK_REGISTRATION
+}
+
+/// Which status field changed: publication moderation or lifecycle status.
+enum HistoryField {
+  MODERATION
+  STATUS
+}
+
+enum NotificationType {
+  REQUEST_APPROVED
+  REQUEST_REJECTED
+  REQUEST_UPDATED
+  REQUEST_CANCELLED
+  REQUEST_COMPLETED
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  OFFER_WITHDRAWN
+  TASK_APPROVED
+  TASK_REJECTED
+  TASK_UPDATED
+  TASK_CANCELLED
+  TASK_COMPLETED
+  REGISTRATION_CREATED
+  REGISTRATION_CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Users and profiles
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String     @db.VarChar(80)
+  email        String     @unique @db.VarChar(254)
+  passwordHash String
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  /// Contact phone. Shown only to an accepted counterpart and to admins.
+  phone        String?    @db.VarChar(30)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  volunteerProfile VolunteerProfile?
+  helpRequests     HelpRequest[]      @relation("RequestOwner")
+  reviewedRequests HelpRequest[]      @relation("RequestReviewer")
+  helpOffers       HelpOffer[]
+  tasks            VolunteerTask[]    @relation("TaskCreator")
+  reviewedTasks    VolunteerTask[]    @relation("TaskReviewer")
+  registrations    TaskRegistration[]
+  statusChanges    StatusHistory[]
+  uploads          MediaAttachment[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+
+  @@index([role])
+  @@index([status])
+}
+
+/// Volunteer details. Availability is private: only the user and admins can read it.
+model VolunteerProfile {
+  userId            String    @id @db.Uuid
+  bio               String?   @db.VarChar(1000)
+  skills            String[]
+  region            String?   @db.VarChar(80)
+  availableDays     Weekday[]
+  availabilityNotes String?   @db.VarChar(500)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interests Category[]
+
+  @@index([region])
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  slug      String   @unique @db.VarChar(80)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  helpRequests    HelpRequest[]
+  tasks           VolunteerTask[]
+  interestedUsers VolunteerProfile[]
+}
+
+// ---------------------------------------------------------------------------
+// Help requests and offers
+// ---------------------------------------------------------------------------
+
+model HelpRequest {
+  id               String            @id @default(uuid()) @db.Uuid
+  ownerId          String            @db.Uuid
+  categoryId       String            @db.Uuid
+  title            String            @db.VarChar(120)
+  description      String            @db.VarChar(4000)
+  /// Public, general area (city or neighbourhood).
+  region           String            @db.VarChar(80)
+  /// Exact address or meeting point. Private until an offer is accepted.
+  addressDetails   String?           @db.VarChar(300)
+  neededBy         DateTime?
+  moderationStatus ModerationStatus  @default(PENDING_REVIEW)
+  rejectionReason  String?           @db.VarChar(500)
+  reviewedById     String?           @db.Uuid
+  reviewedAt       DateTime?
+  /// First publication. Set once; a pending request with this set is under re-moderation.
+  publishedAt      DateTime?
+  status           HelpRequestStatus @default(OPEN)
+  completedAt      DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  owner       User              @relation("RequestOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  reviewedBy  User?             @relation("RequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  category    Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  offers      HelpOffer[]
+  attachments MediaAttachment[]
+
+  @@index([moderationStatus, status, createdAt])
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([region])
+}
+
+model HelpOffer {
+  id          String          @id @default(uuid()) @db.Uuid
+  requestId   String          @db.Uuid
+  volunteerId String          @db.Uuid
+  message     String          @db.VarChar(1000)
+  status      HelpOfferStatus @default(PENDING)
+  decidedAt   DateTime?
+  withdrawnAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  request   HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  volunteer User        @relation(fields: [volunteerId], references: [id], onDelete: Restrict)
+
+  // Partial unique indexes (one accepted offer per request, one active offer per volunteer
+  // per request) are in the hand-written integrity migration.
+  @@index([requestId, status])
+  @@index([volunteerId])
+}
+
+// ---------------------------------------------------------------------------
+// Volunteer tasks and registrations
+// ---------------------------------------------------------------------------
+
+model VolunteerTask {
+  id                 String           @id @default(uuid()) @db.Uuid
+  createdById        String           @db.Uuid
+  categoryId         String           @db.Uuid
+  title              String           @db.VarChar(120)
+  description        String           @db.VarChar(4000)
+  region             String           @db.VarChar(80)
+  location           String           @db.VarChar(300)
+  startsAt           DateTime
+  endsAt             DateTime
+  capacity           Int
+  moderationStatus   ModerationStatus @default(PENDING_REVIEW)
+  rejectionReason    String?          @db.VarChar(500)
+  reviewedById       String?          @db.Uuid
+  reviewedAt         DateTime?
+  /// First publication. Set once; a pending task with this set is under re-moderation.
+  publishedAt        DateTime?
+  status             TaskStatus       @default(OPEN)
+  cancelledAt        DateTime?
+  cancellationReason String?          @db.VarChar(500)
+  completedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  createdBy     User               @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  reviewedBy    User?              @relation("TaskReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  category      Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  registrations TaskRegistration[]
+
+  @@index([moderationStatus, status, startsAt])
+  @@index([createdById])
+  @@index([categoryId])
+  @@index([region])
+}
+
+/// One row per registration. Cancelling keeps the row, so the history is preserved and a
+/// user can register again later (a new row). At most one CONFIRMED row per user and task.
+model TaskRegistration {
+  id          String             @id @default(uuid()) @db.Uuid
+  taskId      String             @db.Uuid
+  userId      String             @db.Uuid
+  status      RegistrationStatus @default(CONFIRMED)
+  cancelledAt DateTime?
+  createdAt   DateTime           @default(now())
+
+  task VolunteerTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([taskId, status])
+  @@index([userId, status])
+}
+
+// ---------------------------------------------------------------------------
+// History, media, notifications, audit
+// ---------------------------------------------------------------------------
+
+/// Append-only log of moderation and lifecycle status changes.
+model StatusHistory {
+  id         String            @id @default(uuid()) @db.Uuid
+  entityType HistoryEntityType
+  entityId   String            @db.Uuid
+  field      HistoryField
+  fromStatus String?           @db.VarChar(30)
+  toStatus   String            @db.VarChar(30)
+  actorId    String            @db.Uuid
+  note       String?           @db.VarChar(500)
+  createdAt  DateTime          @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+}
+
+/// Images attached to help requests.
+model MediaAttachment {
+  id         String   @id @default(uuid()) @db.Uuid
+  requestId  String   @db.Uuid
+  uploaderId String   @db.Uuid
+  storageKey String   @unique @db.VarChar(100)
+  mimeType   String   @db.VarChar(50)
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+
+  request  HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  uploader User        @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+
+  @@index([requestId])
+}
+
+model Notification {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @db.Uuid
+  type       NotificationType
+  /// "HelpRequest" or "VolunteerTask": what the notification links to.
+  entityType String           @db.VarChar(40)
+  entityId   String           @db.Uuid
+  message    String           @db.VarChar(300)
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @db.Uuid
+  action     String   @db.VarChar(60)
+  entityType String   @db.VarChar(40)
+  entityId   String   @db.Uuid
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}

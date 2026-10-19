@@ -14,10 +14,6 @@ const DEFAULT_LOG_LEVEL: Record<NodeEnv, LogLevel> = {
 
 const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
 
-/**
- * Phase 1 configuration. DATABASE_URL (Phase 2) and JWT settings (Phase 3) are added in the
- * phases that use them.
- */
 const envSchema = z
   .object({
     NODE_ENV: z.enum(NODE_ENVS).default('development'),
@@ -37,6 +33,10 @@ const envSchema = z
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
     RATE_LIMIT_WINDOW_MS: positiveInt(15 * 60 * 1000),
     RATE_LIMIT_MAX: positiveInt(300),
+
+    DATABASE_URL: z
+      .string()
+      .regex(/^postgres(ql)?:\/\//, 'must be a postgresql:// connection string'),
   })
   .transform((env) => ({
     ...env,

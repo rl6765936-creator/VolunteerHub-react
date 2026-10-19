@@ -2,6 +2,8 @@ import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { AppError, ErrorCodes, type ErrorBody } from '../lib/errors.js';
 import type { Logger } from '../lib/logger.js';
+import { prismaErrorCode } from '../lib/prisma.js';
+import multer from 'multer';
 
 /** Forwards unmatched requests to the error handler as a 404. */
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
@@ -29,6 +31,23 @@ function toAppError(error: unknown): AppError | null {
       message: issue.message,
     }));
     return new AppError(400, ErrorCodes.VALIDATION_ERROR, 'Request validation failed.', details);
+  }
+
+  const prismaCode = prismaErrorCode(error);
+  if (prismaCode === 'P2002') {
+    return new AppError(409, ErrorCodes.CONFLICT, 'A record with these values already exists.');
+  }
+  if (prismaCode === 'P2025') {
+    return new AppError(404, ErrorCodes.NOT_FOUND, 'Resource not found.');
+  }
+
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return new AppError(413, ErrorCodes.PAYLOAD_TOO_LARGE, 'The file is too large.');
+    }
+    return new AppError(400, ErrorCodes.BAD_REQUEST, 'Invalid file upload.', {
+      reason: error.code,
+    });
   }
 
   if (isHttpError(error)) {

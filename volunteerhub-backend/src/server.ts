@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { loadEnv, type Env } from './config/env.js';
 import { createLogger } from './lib/logger.js';
+import { createPrisma } from './lib/prisma.js';
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -15,7 +16,8 @@ function loadEnvOrExit(): Env {
 
 const env = loadEnvOrExit();
 const logger = createLogger(env.LOG_LEVEL);
-const app = createApp({ env, logger });
+const prisma = createPrisma(env.DATABASE_URL);
+const app = createApp({ env, logger, prisma });
 
 const server = app.listen(env.PORT, () => {
   logger.info('Server listening', { port: env.PORT, environment: env.NODE_ENV });
@@ -31,7 +33,10 @@ function shutdown(signal: string): void {
   // Force exit if open connections do not drain in time.
   setTimeout(() => process.exit(1), SHUTDOWN_TIMEOUT_MS).unref();
   server.close((error) => {
-    process.exit(error ? 1 : 0);
+    prisma
+      .$disconnect()
+      .catch(() => undefined)
+      .finally(() => process.exit(error ? 1 : 0));
   });
 }
 
