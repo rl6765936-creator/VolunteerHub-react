@@ -5,7 +5,9 @@ import { createAdminRouter } from './modules/admin/admin.routes.js';
 import { createAttachmentsRouter } from './modules/attachments/attachments.routes.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
 import { createCategoriesRouter } from './modules/categories/categories.routes.js';
+import { createMyDashboardRouter } from './modules/dashboard/dashboard.routes.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
+import { createNotificationsRouter } from './modules/notifications/notifications.routes.js';
 import { createOffersRouter } from './modules/offers/offers.routes.js';
 import { createVolunteerProfileRouter } from './modules/profiles/profile.routes.js';
 import {
@@ -24,12 +26,14 @@ export function createApiRouter(deps: AppDependencies, storage: LocalStorage): R
   router.use('/users/me/volunteer-profile', createVolunteerProfileRouter(deps));
   router.use('/users/me/requests', createMyRequestsRouter(deps));
   router.use('/users/me', createMyTasksRouter(deps));
+  router.use('/users/me', createMyDashboardRouter(deps));
   router.use('/users', createUsersRouter(deps));
   router.use('/categories', createCategoriesRouter(deps));
   router.use('/requests', createRequestsRouter(deps));
   router.use(createAttachmentsRouter(deps, storage));
   router.use(createOffersRouter(deps));
   router.use('/tasks', createTasksRouter(deps));
+  router.use('/notifications', createNotificationsRouter(deps));
   router.use('/admin', createAdminRouter(deps));
 
   return router;

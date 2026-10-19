@@ -5,6 +5,8 @@ import {
 } from '@asteasolutions/zod-to-openapi';
 import { z, type ZodObject, type ZodType } from 'zod';
 import { loginBody, registerBody } from '../modules/auth/auth.schemas.js';
+import { auditLogQuery } from '../modules/dashboard/dashboard.routes.js';
+import { listNotificationsQuery } from '../modules/notifications/notifications.routes.js';
 import {
   createCategoryBody,
   includeInactiveQuery,
@@ -451,6 +453,47 @@ const endpoints: Endpoint[] = [
     query: myRegistrationsQuery,
   },
 
+  // Notifications, my area and matching
+  {
+    method: 'get',
+    path: `${P}/notifications`,
+    tag: 'Notifications',
+    summary: 'My notifications (meta.unreadCount)',
+    access: 'user',
+    query: listNotificationsQuery,
+  },
+  {
+    method: 'patch',
+    path: `${P}/notifications/{id}/read`,
+    tag: 'Notifications',
+    summary: 'Mark one notification as read',
+    access: 'user',
+    status: 204,
+  },
+  {
+    method: 'post',
+    path: `${P}/notifications/read-all`,
+    tag: 'Notifications',
+    summary: 'Mark all my notifications as read',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me/dashboard`,
+    tag: 'My area',
+    summary: 'My requests, offers, tasks, upcoming registrations and unread count',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me/matches`,
+    tag: 'My area',
+    summary: 'Tasks and requests that match my volunteer profile',
+    access: 'user',
+    description:
+      'Rule-based, no AI: region, interest categories and available weekdays (tasks, in TIME_ZONE). Own, full and already joined items are excluded. `meta.profileComplete` is false without a profile.',
+  },
+
   // Admin: moderation of requests
   {
     method: 'get',
@@ -500,6 +543,24 @@ const endpoints: Endpoint[] = [
     summary: 'Reject a pending task or take down a published one',
     access: 'admin',
     body: rejectBody,
+  },
+
+  {
+    method: 'get',
+    path: `${P}/admin/dashboard`,
+    tag: 'Admin: dashboard',
+    summary: 'Statistics and success metrics',
+    access: 'admin',
+    description:
+      'Moderation queue sizes, request and task status counts, handled requests rate, filled tasks rate, time to match, unfilled upcoming tasks, per-category and per-region counts.',
+  },
+  {
+    method: 'get',
+    path: `${P}/admin/audit-logs`,
+    tag: 'Admin: dashboard',
+    summary: 'Audit log of admin actions',
+    access: 'admin',
+    query: auditLogQuery,
   },
 
   // Admin: users

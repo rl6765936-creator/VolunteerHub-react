@@ -48,6 +48,19 @@ const envSchema = z
     WRITE_RATE_LIMIT_MAX: positiveInt(30),
 
     UPLOAD_DIR: z.string().min(1).default('uploads'),
+
+    /** IANA time zone used to match task days with volunteers' available weekdays. */
+    TIME_ZONE: z
+      .string()
+      .default('Asia/Jerusalem')
+      .refine((zone) => {
+        try {
+          new Intl.DateTimeFormat('en-US', { timeZone: zone });
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'must be a valid IANA time zone'),
   })
   .transform((env) => ({
     ...env,

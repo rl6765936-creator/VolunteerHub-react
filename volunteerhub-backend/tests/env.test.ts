@@ -67,7 +67,13 @@ describe('loadEnv', () => {
       AUTH_RATE_LIMIT_MAX: 20,
       WRITE_RATE_LIMIT_MAX: 30,
       UPLOAD_DIR: 'uploads',
+      TIME_ZONE: 'Asia/Jerusalem',
     });
+  });
+
+  it('validates the time zone', () => {
+    expect(loadEnv({ ...REQUIRED, TIME_ZONE: 'Europe/London' }).TIME_ZONE).toBe('Europe/London');
+    expect(() => loadEnv({ ...REQUIRED, TIME_ZONE: 'Mars/Olympus' })).toThrow(/TIME_ZONE/);
   });
 
   it('names the invalid variable but never echoes its value', () => {
