@@ -6,6 +6,7 @@ import { createAttachmentsRouter } from './modules/attachments/attachments.route
 import { createAuthRouter } from './modules/auth/auth.routes.js';
 import { createCategoriesRouter } from './modules/categories/categories.routes.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
+import { createOffersRouter } from './modules/offers/offers.routes.js';
 import { createVolunteerProfileRouter } from './modules/profiles/profile.routes.js';
 import {
   createMyRequestsRouter,
@@ -25,6 +26,7 @@ export function createApiRouter(deps: AppDependencies, storage: LocalStorage): R
   router.use('/categories', createCategoriesRouter(deps));
   router.use('/requests', createRequestsRouter(deps));
   router.use(createAttachmentsRouter(deps, storage));
+  router.use(createOffersRouter(deps));
   router.use('/admin', createAdminRouter(deps));
 
   return router;

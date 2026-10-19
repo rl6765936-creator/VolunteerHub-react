@@ -11,6 +11,7 @@ import {
   updateCategoryBody,
 } from '../modules/categories/categories.routes.js';
 import { approveBody, cancelBody, rejectBody } from '../modules/moderation/moderation.schemas.js';
+import { createOfferBody, myOffersQuery } from '../modules/offers/offers.schemas.js';
 import { volunteerProfileBody } from '../modules/profiles/profile.routes.js';
 import {
   adminListRequestsQuery,
@@ -240,6 +241,59 @@ const endpoints: Endpoint[] = [
     summary: 'My help requests, in every state',
     access: 'user',
     query: myRequestsQuery,
+  },
+
+  // Help offers
+  {
+    method: 'post',
+    path: `${P}/requests/{id}/offers`,
+    tag: 'Help offers',
+    summary: 'Offer help on an approved, open request',
+    access: 'user',
+    body: createOfferBody,
+    status: 201,
+    description:
+      'Not on your own request. One active (pending or accepted) offer per volunteer per request. The owner is notified.',
+  },
+  {
+    method: 'get',
+    path: `${P}/requests/{id}/offers`,
+    tag: 'Help offers',
+    summary: 'Offers on a request',
+    access: 'user',
+    description:
+      'The owner and admins see all offers; other users see only their own. Volunteer contact details appear only on the accepted offer; availability never appears.',
+  },
+  {
+    method: 'post',
+    path: `${P}/offers/{id}/accept`,
+    tag: 'Help offers',
+    summary: 'Accept an offer (request owner)',
+    access: 'user',
+    description:
+      'Exactly one offer per request can be accepted (row lock + partial unique index). Other pending offers are declined and the request becomes IN_PROGRESS.',
+  },
+  {
+    method: 'post',
+    path: `${P}/offers/{id}/decline`,
+    tag: 'Help offers',
+    summary: 'Decline a pending offer (request owner)',
+    access: 'user',
+  },
+  {
+    method: 'post',
+    path: `${P}/offers/{id}/withdraw`,
+    tag: 'Help offers',
+    summary: 'Withdraw my pending offer',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me/offers`,
+    tag: 'Help offers',
+    summary: 'My offers',
+    access: 'user',
+    query: myOffersQuery,
   },
 
   // Images
