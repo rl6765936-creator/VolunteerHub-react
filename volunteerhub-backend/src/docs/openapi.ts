@@ -14,6 +14,15 @@ import { approveBody, cancelBody, rejectBody } from '../modules/moderation/moder
 import { createOfferBody, myOffersQuery } from '../modules/offers/offers.schemas.js';
 import { volunteerProfileBody } from '../modules/profiles/profile.routes.js';
 import {
+  adminListTasksQuery,
+  createTaskBody,
+  listTasksQuery,
+  myRegistrationsQuery,
+  myTasksQuery,
+  registrationsQuery,
+  updateTaskBody,
+} from '../modules/tasks/tasks.schemas.js';
+import {
   adminListRequestsQuery,
   createRequestBody,
   listRequestsQuery,
@@ -333,6 +342,115 @@ const endpoints: Endpoint[] = [
     status: 204,
   },
 
+  // Volunteer tasks
+  {
+    method: 'get',
+    path: `${P}/tasks`,
+    tag: 'Volunteer tasks',
+    summary: 'Search approved volunteer tasks',
+    access: 'public',
+    query: listTasksQuery,
+    description:
+      'Public. Only approved tasks (default: open and upcoming). Each item has `capacity`, `registeredCount`, `spotsLeft` and `registrationOpen`.',
+  },
+  {
+    method: 'post',
+    path: `${P}/tasks`,
+    tag: 'Volunteer tasks',
+    summary: 'Create a task (any user; starts as PENDING_REVIEW)',
+    access: 'user',
+    body: createTaskBody,
+    status: 201,
+  },
+  {
+    method: 'get',
+    path: `${P}/tasks/{id}`,
+    tag: 'Volunteer tasks',
+    summary: 'Task details',
+    access: 'public',
+    description:
+      'Approved tasks are public. Pending or rejected ones are visible only to the creator, admins and registered volunteers (404 otherwise).',
+  },
+  {
+    method: 'patch',
+    path: `${P}/tasks/{id}`,
+    tag: 'Volunteer tasks',
+    summary: 'Edit my task (open and not started)',
+    access: 'user',
+    body: updateTaskBody,
+    description:
+      'Creator only. Material fields (title, description, category, region, location, startsAt, endsAt) send a published task back to PENDING_REVIEW: registrations are kept, volunteers are notified, new registrations wait for re-approval. Capacity is not material but cannot drop below confirmed registrations (409 CAPACITY_TOO_LOW).',
+  },
+  {
+    method: 'post',
+    path: `${P}/tasks/{id}/cancel`,
+    tag: 'Volunteer tasks',
+    summary: 'Cancel a task (creator or admin)',
+    access: 'user',
+    body: cancelBody,
+    description: 'Registered volunteers are notified. Admin cancellations are audit-logged.',
+  },
+  {
+    method: 'post',
+    path: `${P}/tasks/{id}/complete`,
+    tag: 'Volunteer tasks',
+    summary: 'Complete a task after it started (creator or admin)',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/tasks/{id}/history`,
+    tag: 'Volunteer tasks',
+    summary: 'Moderation, status and registration history (creator or admin)',
+    access: 'user',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me/tasks`,
+    tag: 'Volunteer tasks',
+    summary: 'Tasks I created, in every state',
+    access: 'user',
+    query: myTasksQuery,
+  },
+
+  // Registrations
+  {
+    method: 'post',
+    path: `${P}/tasks/{id}/registrations`,
+    tag: 'Registrations',
+    summary: 'Register for a task (immediately CONFIRMED)',
+    access: 'user',
+    status: 201,
+    description:
+      'Automatic while the task is approved, open, upcoming and has free places. Concurrency-safe: capacity is never exceeded (409 TASK_FULL). Not for your own task; one confirmed registration per user (409 ALREADY_EXISTS).',
+  },
+  {
+    method: 'delete',
+    path: `${P}/tasks/{id}/registrations/me`,
+    tag: 'Registrations',
+    summary: 'Cancel my registration (before the task starts)',
+    access: 'user',
+    description:
+      'The registration is kept as CANCELLED (history); you may register again later. Returns the cancelled registration.',
+  },
+  {
+    method: 'get',
+    path: `${P}/tasks/{id}/registrations`,
+    tag: 'Registrations',
+    summary: 'Registrations of a task (creator or admin)',
+    access: 'user',
+    query: registrationsQuery,
+    description: 'Name and email of each volunteer. Availability is never included.',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me/registrations`,
+    tag: 'Registrations',
+    summary: 'My registrations',
+    access: 'user',
+    query: myRegistrationsQuery,
+  },
+
   // Admin: moderation of requests
   {
     method: 'get',
@@ -355,6 +473,31 @@ const endpoints: Endpoint[] = [
     path: `${P}/admin/requests/{id}/reject`,
     tag: 'Admin: moderation',
     summary: 'Reject a pending request or take down a published one',
+    access: 'admin',
+    body: rejectBody,
+  },
+
+  {
+    method: 'get',
+    path: `${P}/admin/tasks`,
+    tag: 'Admin: moderation',
+    summary: 'All tasks, e.g. the PENDING_REVIEW queue',
+    access: 'admin',
+    query: adminListTasksQuery,
+  },
+  {
+    method: 'post',
+    path: `${P}/admin/tasks/{id}/approve`,
+    tag: 'Admin: moderation',
+    summary: 'Approve and publish a pending task',
+    access: 'admin',
+    body: approveBody,
+  },
+  {
+    method: 'post',
+    path: `${P}/admin/tasks/{id}/reject`,
+    tag: 'Admin: moderation',
+    summary: 'Reject a pending task or take down a published one',
     access: 'admin',
     body: rejectBody,
   },
