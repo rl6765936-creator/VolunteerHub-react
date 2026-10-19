@@ -100,3 +100,12 @@ export async function createUser(role: UserRole = 'USER', name?: string): Promis
     auth: { Authorization: `Bearer ${token}` },
   };
 }
+
+let categoryCounter = 0;
+
+export async function createCategory(name?: string) {
+  categoryCounter += 1;
+  return testPrisma().category.create({
+    data: { name: name ?? `Category ${categoryCounter}`, slug: `category-${categoryCounter}` },
+  });
+}

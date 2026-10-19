@@ -6,6 +6,12 @@ import {
 import { z, type ZodObject, type ZodType } from 'zod';
 import { loginBody, registerBody } from '../modules/auth/auth.schemas.js';
 import {
+  createCategoryBody,
+  includeInactiveQuery,
+  updateCategoryBody,
+} from '../modules/categories/categories.routes.js';
+import { volunteerProfileBody } from '../modules/profiles/profile.routes.js';
+import {
   changePasswordBody,
   listUsersQuery,
   updateMeBody,
@@ -108,6 +114,51 @@ const endpoints: Endpoint[] = [
     access: 'user',
     body: changePasswordBody,
     status: 204,
+  },
+
+  {
+    method: 'get',
+    path: `${P}/users/me/volunteer-profile`,
+    tag: 'Volunteer profile',
+    summary: 'My volunteer profile (null until filled in)',
+    access: 'user',
+  },
+  {
+    method: 'put',
+    path: `${P}/users/me/volunteer-profile`,
+    tag: 'Volunteer profile',
+    summary: 'Create or replace my volunteer profile',
+    access: 'user',
+    body: volunteerProfileBody,
+    description:
+      'Requires a Bearer token. Availability (days and notes) is private: only you and admins can read it.',
+  },
+
+  // Categories
+  {
+    method: 'get',
+    path: `${P}/categories`,
+    tag: 'Categories',
+    summary: 'List categories',
+    access: 'public',
+    query: includeInactiveQuery,
+  },
+  {
+    method: 'post',
+    path: `${P}/admin/categories`,
+    tag: 'Admin: categories',
+    summary: 'Create a category',
+    access: 'admin',
+    body: createCategoryBody,
+    status: 201,
+  },
+  {
+    method: 'patch',
+    path: `${P}/admin/categories/{id}`,
+    tag: 'Admin: categories',
+    summary: 'Rename or deactivate a category (never deleted)',
+    access: 'admin',
+    body: updateCategoryBody,
   },
 
   // Admin: users
