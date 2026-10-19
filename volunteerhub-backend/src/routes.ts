@@ -12,6 +12,7 @@ import {
   createMyRequestsRouter,
   createRequestsRouter,
 } from './modules/requests/requests.routes.js';
+import { createMyTasksRouter, createTasksRouter } from './modules/tasks/tasks.routes.js';
 import { createUsersRouter } from './modules/users/users.routes.js';
 
 /** Root of the API, mounted at /api. Each feature module contributes its own router. */
@@ -22,11 +23,13 @@ export function createApiRouter(deps: AppDependencies, storage: LocalStorage): R
   router.use('/auth', createAuthRouter(deps));
   router.use('/users/me/volunteer-profile', createVolunteerProfileRouter(deps));
   router.use('/users/me/requests', createMyRequestsRouter(deps));
+  router.use('/users/me', createMyTasksRouter(deps));
   router.use('/users', createUsersRouter(deps));
   router.use('/categories', createCategoriesRouter(deps));
   router.use('/requests', createRequestsRouter(deps));
   router.use(createAttachmentsRouter(deps, storage));
   router.use(createOffersRouter(deps));
+  router.use('/tasks', createTasksRouter(deps));
   router.use('/admin', createAdminRouter(deps));
 
   return router;

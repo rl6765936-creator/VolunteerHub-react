@@ -159,3 +159,54 @@ export const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',
 );
+
+export interface TaskOptions {
+  approve?: TestUser;
+  body?: Record<string, unknown>;
+}
+
+/** Creates a volunteer task through the API (as its creator), optionally approving it. */
+export async function createTask(
+  app: Express,
+  creator: TestUser,
+  categoryId: string,
+  options: TaskOptions = {},
+): Promise<string> {
+  const res = await request(app)
+    .post('/api/tasks')
+    .set(creator.auth)
+    .send({
+      title: 'Food bank packing',
+      description: 'Packing food boxes for families before the holiday.',
+      categoryId,
+      region: 'Jerusalem',
+      location: 'Community center, Jaffa St 1',
+      startsAt: futureDate(7, 8).toISOString(),
+      endsAt: futureDate(7, 12).toISOString(),
+      capacity: 3,
+      ...options.body,
+    });
+  if (res.status !== 201) {
+    throw new Error(`createTask failed: ${res.status} ${JSON.stringify(res.body)}`);
+  }
+  const id = res.body.data.id as string;
+  if (options.approve) {
+    const approved = await request(app)
+      .post(`/api/admin/tasks/${id}/approve`)
+      .set(options.approve.auth)
+      .send({});
+    if (approved.status !== 200) throw new Error(`approve task failed: ${approved.status}`);
+  }
+  return id;
+}
+
+/** Moves a task into the past (keeping its duration), for "already started" rules. */
+export async function moveTaskToPast(taskId: string): Promise<void> {
+  await testPrisma().volunteerTask.update({
+    where: { id: taskId },
+    data: {
+      startsAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      endsAt: new Date(Date.now() - 60 * 60 * 1000),
+    },
+  });
+}
