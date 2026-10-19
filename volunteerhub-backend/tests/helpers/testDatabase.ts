@@ -1,9 +1,22 @@
+import { readFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { parseEnv } from 'node:util';
 import pg from 'pg';
+
+/** DATABASE_URL_TEST from the local .env file, if any (only this one variable is read). */
+function fromDotEnv(): string | undefined {
+  try {
+    return parseEnv(readFileSync(path.resolve(import.meta.dirname, '../../.env'), 'utf8'))
+      .DATABASE_URL_TEST;
+  } catch {
+    return undefined;
+  }
+}
 
 export const TEST_DATABASE_URL =
   process.env.DATABASE_URL_TEST ??
+  fromDotEnv() ??
   'postgresql://volunteerhub:volunteerhub@localhost:5432/volunteerhub_test';
 
 /** Refuses to touch any database whose name does not end in "_test". */

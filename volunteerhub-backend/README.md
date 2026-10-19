@@ -72,7 +72,8 @@ npm run dev                 # http://localhost:3001
 
 ## Tests
 
-The tests run against a real PostgreSQL database named in `DATABASE_URL_TEST` (default
+The tests run against a real PostgreSQL database named in `DATABASE_URL_TEST` (from the
+environment or the `.env` file; default
 `postgresql://volunteerhub:volunteerhub@localhost:5432/volunteerhub_test`). Before the run, the
 schema is dropped and rebuilt from the migrations in `prisma/migrations`; tables are truncated
 before each test. For safety, the suite refuses to run against a database whose name does not

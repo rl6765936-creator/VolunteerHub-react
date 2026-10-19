@@ -1,12 +1,15 @@
 import { execFile } from 'node:child_process';
+import path from 'node:path';
 import { promisify } from 'node:util';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { resetDb, testPrisma } from './helpers/setup.js';
 import { TEST_DATABASE_URL } from './helpers/testDatabase.js';
 
 const run = promisify(execFile);
+// Runs the tsx CLI with the current Node binary: `npx` cannot be spawned directly on Windows.
+const tsxCli = path.resolve(import.meta.dirname, '../node_modules/tsx/dist/cli.mjs');
 const seed = (extra: Record<string, string> = {}) =>
-  run('npx', ['tsx', 'prisma/seed.ts'], {
+  run(process.execPath, [tsxCli, 'prisma/seed.ts'], {
     env: {
       ...process.env,
       DATABASE_URL: TEST_DATABASE_URL,
@@ -38,9 +41,13 @@ describe('seed', () => {
   });
 
   it('refuses a short admin password without printing it', async () => {
-    await expect(seed({ SEED_ADMIN_PASSWORD: 'shortpw' })).rejects.toMatchObject({
-      stderr: expect.not.stringContaining('shortpw') as unknown,
-    });
+    const failure = (await seed({ SEED_ADMIN_PASSWORD: 'shortpw' }).then(
+      () => null,
+      (error: unknown) => error,
+    )) as { code?: number; stderr?: string } | null;
+    expect(failure?.code).toBe(1);
+    expect(failure?.stderr).toContain('SEED_ADMIN_PASSWORD: must be at least 12 characters');
+    expect(failure?.stderr).not.toContain('shortpw');
     expect(await testPrisma().user.count()).toBe(0);
   });
 });
