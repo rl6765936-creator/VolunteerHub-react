@@ -3,6 +3,7 @@ import { EnvValidationError, loadEnv } from '../src/config/env.js';
 
 const REQUIRED = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/volunteerhub',
+  JWT_SECRET: 'x'.repeat(32),
 };
 
 describe('loadEnv', () => {
@@ -46,7 +47,27 @@ describe('loadEnv', () => {
 
   it('requires a PostgreSQL DATABASE_URL', () => {
     expect(() => loadEnv({})).toThrow(/DATABASE_URL/);
-    expect(() => loadEnv({ DATABASE_URL: 'mysql://x' })).toThrow(/DATABASE_URL/);
+    expect(() => loadEnv({ ...REQUIRED, DATABASE_URL: 'mysql://x' })).toThrow(/DATABASE_URL/);
+  });
+
+  it('requires a JWT secret of at least 32 characters and never echoes it', () => {
+    expect(() => loadEnv({ ...REQUIRED, JWT_SECRET: undefined })).toThrow(/JWT_SECRET/);
+    try {
+      loadEnv({ ...REQUIRED, JWT_SECRET: 'tooshortsecret' });
+      expect.unreachable();
+    } catch (error) {
+      expect((error as Error).message).toMatch(/JWT_SECRET/);
+      expect((error as Error).message).not.toContain('tooshortsecret');
+    }
+  });
+
+  it('applies auth, write-limit and upload defaults', () => {
+    expect(loadEnv({ ...REQUIRED })).toMatchObject({
+      JWT_EXPIRES_IN_SECONDS: 7200,
+      AUTH_RATE_LIMIT_MAX: 20,
+      WRITE_RATE_LIMIT_MAX: 30,
+      UPLOAD_DIR: 'uploads',
+    });
   });
 
   it('names the invalid variable but never echoes its value', () => {

@@ -4,6 +4,13 @@ import {
   type RouteConfig,
 } from '@asteasolutions/zod-to-openapi';
 import { z, type ZodObject, type ZodType } from 'zod';
+import { loginBody, registerBody } from '../modules/auth/auth.schemas.js';
+import {
+  changePasswordBody,
+  listUsersQuery,
+  updateMeBody,
+  updateUserBody,
+} from '../modules/users/users.routes.js';
 
 type Access = 'public' | 'user' | 'admin';
 type Method = RouteConfig['method'];
@@ -47,6 +54,85 @@ const endpoints: Endpoint[] = [
     tag: 'Health',
     summary: 'Liveness check',
     access: 'public',
+  },
+  {
+    method: 'get',
+    path: `${P}/health/ready`,
+    tag: 'Health',
+    summary: 'Readiness check (database)',
+    access: 'public',
+  },
+
+  // Auth and current user (same contract as VoiceUp)
+  {
+    method: 'post',
+    path: `${P}/auth/register`,
+    tag: 'Auth',
+    summary: 'Register (always creates a USER)',
+    access: 'public',
+    body: registerBody,
+    status: 201,
+    description:
+      'Returns `{ data: { user, accessToken, tokenType: "Bearer", expiresIn } }`. Rate limited per IP.',
+  },
+  {
+    method: 'post',
+    path: `${P}/auth/login`,
+    tag: 'Auth',
+    summary: 'Log in and receive an access token',
+    access: 'public',
+    body: loginBody,
+    description:
+      'Same response as register. Stateless JWT: there is no refresh or logout endpoint; the client discards the token. Blocked accounts get 403 ACCOUNT_BLOCKED.',
+  },
+  {
+    method: 'get',
+    path: `${P}/users/me`,
+    tag: 'Users',
+    summary: 'Current user',
+    access: 'user',
+  },
+  {
+    method: 'patch',
+    path: `${P}/users/me`,
+    tag: 'Users',
+    summary: 'Change display name or contact phone',
+    access: 'user',
+    body: updateMeBody,
+  },
+  {
+    method: 'post',
+    path: `${P}/users/me/password`,
+    tag: 'Users',
+    summary: 'Change password',
+    access: 'user',
+    body: changePasswordBody,
+    status: 204,
+  },
+
+  // Admin: users
+  {
+    method: 'get',
+    path: `${P}/admin/users`,
+    tag: 'Admin: users',
+    summary: 'List users',
+    access: 'admin',
+    query: listUsersQuery,
+  },
+  {
+    method: 'get',
+    path: `${P}/admin/users/{id}`,
+    tag: 'Admin: users',
+    summary: 'User details, including the private volunteer profile',
+    access: 'admin',
+  },
+  {
+    method: 'patch',
+    path: `${P}/admin/users/{id}`,
+    tag: 'Admin: users',
+    summary: 'Change role or block/unblock (never your own account; audit-logged)',
+    access: 'admin',
+    body: updateUserBody,
   },
 ];
 

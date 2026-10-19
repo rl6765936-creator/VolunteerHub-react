@@ -37,6 +37,17 @@ const envSchema = z
     DATABASE_URL: z
       .string()
       .regex(/^postgres(ql)?:\/\//, 'must be a postgresql:// connection string'),
+
+    JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
+    /** Access token lifetime in seconds. Default: 2 hours. */
+    JWT_EXPIRES_IN_SECONDS: positiveInt(2 * 60 * 60),
+
+    /** Stricter per-IP limit for register/login, within RATE_LIMIT_WINDOW_MS. */
+    AUTH_RATE_LIMIT_MAX: positiveInt(20),
+    /** Per-IP limit for creating requests, offers and tasks and for uploads, per hour. */
+    WRITE_RATE_LIMIT_MAX: positiveInt(30),
+
+    UPLOAD_DIR: z.string().min(1).default('uploads'),
   })
   .transform((env) => ({
     ...env,

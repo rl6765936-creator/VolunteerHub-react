@@ -52,3 +52,13 @@ export function globalRateLimiter(env: Env): RequestHandler {
     path.startsWith('/health'),
   );
 }
+
+/** Stricter limit for register and login, against credential stuffing and brute force. */
+export function authRateLimiter(env: Env): RequestHandler {
+  return limiter(env.RATE_LIMIT_WINDOW_MS, env.AUTH_RATE_LIMIT_MAX);
+}
+
+/** Hourly limit for writes that create content: requests, offers, tasks and uploads. */
+export function writeRateLimiter(env: Env): RequestHandler {
+  return limiter(60 * 60 * 1000, env.WRITE_RATE_LIMIT_MAX);
+}
