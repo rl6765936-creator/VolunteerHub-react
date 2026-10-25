@@ -142,6 +142,25 @@ const updateHelpRequest = async (
   return response.json();
 };
 
+/** Owner only, after an offer was accepted (status IN_PROGRESS). */
+const completeHelpRequest = async (
+  requestId: string,
+  token: string
+): Promise<HelpRequestDetailResponse> => {
+  const response = await fetch(`${API_URL}/requests/${requestId}/complete`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to complete help request");
+  }
+
+  return response.json();
+};
+
 export {
   getHelpRequests,
   getMyHelpRequests,
@@ -151,4 +170,5 @@ export {
   getHelpRequestImages,
   getHelpRequestImageFile,
   updateHelpRequest,
+  completeHelpRequest,
 };
