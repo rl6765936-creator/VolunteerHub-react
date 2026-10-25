@@ -1,4 +1,4 @@
-import {  useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "../types/auth";
 import { getCurrentUser } from "../services/authApi";
@@ -17,6 +17,9 @@ import { AuthContext } from "./authContextDefinition";
   }
 };
 
+
+const isUnauthorized = (error: unknown) =>
+  error instanceof Error && "status" in error && error.status === 401;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
@@ -37,24 +40,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: user, isPending, isFetching, error } = useQuery({
     queryKey: ["currentUser", token],
     queryFn: async () => {
-      const response = await getCurrentUser(token!);
-      return response.data;
+      try {
+        const response = await getCurrentUser(token!);
+        return response.data;
+      } catch (requestError) {
+        if (isUnauthorized(requestError)) {
+          localStorage.removeItem("accessToken");
+        }
+        throw requestError;
+      }
     },
     enabled: token !== null,
     retry: false,
   });
-  useEffect(() => {
-    if (
-      token !== null &&
-      error instanceof Error &&
-      "status" in error &&
-      error.status === 401
-    ) {
-      localStorage.removeItem("accessToken");
-      setToken(null);
-      queryClient.removeQueries({ queryKey: ["currentUser"] });
-    }
-  }, [token, error, queryClient]);
+
+  // A token the server rejected (401) counts as logged out. This is derived during render
+  // instead of calling setToken(null) inside an effect (react-hooks/set-state-in-effect).
+  const activeToken = isUnauthorized(error) ? null : token;
 
   const login = (newToken: string, user: User) => {
     localStorage.setItem("accessToken", newToken);
@@ -67,15 +69,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     queryClient.removeQueries({ queryKey: ["currentUser"] });
     queryClient.removeQueries({ queryKey: ["myHelpRequests"] });
+    // Offers include the accepted volunteer's contact details.
+    queryClient.removeQueries({ queryKey: ["requestOffers"] });
   };
 
-  const isLoading = token !== null && isPending && isFetching;
+  const isLoading = activeToken !== null && isPending && isFetching;
 
   return (
     <AuthContext.Provider
       value={{
-        token,
-        isAuthenticated: token !== null,
+        token: activeToken,
+        isAuthenticated: activeToken !== null,
         isLoading,
         user: user ?? null,
         login,
@@ -85,4 +89,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+};
