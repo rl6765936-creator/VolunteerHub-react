@@ -1,0 +1,50 @@
+databases:
+  - name: volunteerhub-db
+    plan: free
+    region: frankfurt
+    databaseName: volunteerhub
+    user: volunteerhub
+
+services:
+  - type: web
+    name: volunteerhub-api-rl6765936
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: volunteerhub-backend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run db:deploy && npm run db:seed && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: volunteerhub-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://volunteerhub-rl6765936.onrender.com
+      - key: TRUST_PROXY
+        value: "1"
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+
+  - type: web
+    name: volunteerhub-rl6765936
+    runtime: static
+    rootDir: volunteerhub-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://volunteerhub-api-rl6765936.onrender.com/api
