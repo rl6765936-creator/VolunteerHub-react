@@ -1,7 +1,6 @@
 import { isUnderReModeration } from '../moderation/moderation.schemas.js';
 import { isRegistrationOpen, type TaskAccess, type TaskDetail } from './taskAccess.js';
 
-/** Shared by list items and the detail view. Tasks carry no private contact details. */
 export function serializeTask(
   task: TaskDetail,
   options: { access?: TaskAccess; own?: boolean } = {},

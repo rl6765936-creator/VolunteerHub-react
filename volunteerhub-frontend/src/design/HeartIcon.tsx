@@ -4,7 +4,6 @@ type HeartIconProps = {
   className?: string;
 };
 
-/** Decorative heart. Always aria-hidden: the text next to it carries the meaning. */
 const HeartIcon = ({ size = 20, color = "currentColor", className = "" }: HeartIconProps) => (
   <svg
     className={`vh-heart-icon ${className}`.trim()}

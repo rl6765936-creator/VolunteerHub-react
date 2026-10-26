@@ -32,7 +32,6 @@ export function testPrisma(): Db {
   return prismaSingleton;
 }
 
-/** Builds an isolated app (fresh rate-limit counters) with test configuration plus overrides. */
 export function buildApp(overrides: Record<string, string> = {}): Express {
   return createApp({
     env: testEnv(overrides),
@@ -116,7 +115,6 @@ export interface RequestOptions {
   body?: Record<string, unknown>;
 }
 
-/** Creates a help request through the API (as the owner), optionally approving it. */
 export async function createHelpRequest(
   app: Express,
   owner: TestUser,
@@ -148,7 +146,6 @@ export async function createHelpRequest(
   return id;
 }
 
-/** A 1x1 PNG. */
 export const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
   'base64',
@@ -159,7 +156,6 @@ export interface TaskOptions {
   body?: Record<string, unknown>;
 }
 
-/** Creates a volunteer task through the API (as its creator), optionally approving it. */
 export async function createTask(
   app: Express,
   creator: TestUser,
@@ -194,7 +190,6 @@ export async function createTask(
   return id;
 }
 
-/** Moves a task into the past (keeping its duration), for "already started" rules. */
 export async function moveTaskToPast(taskId: string): Promise<void> {
   await testPrisma().volunteerTask.update({
     where: { id: taskId },

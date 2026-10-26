@@ -13,7 +13,6 @@ describe('OpenAPI document and routes stay in sync', () => {
     const keys = documentedEndpoints.map(({ method, path }) => `${method} ${path}`);
     expect(new Set(keys).size).toBe(keys.length);
 
-    // Every route handler defined in the feature modules has one documented operation.
     const modulesDir = path.resolve(import.meta.dirname, '../src/modules');
     const sources = readdirSync(modulesDir, { recursive: true, encoding: 'utf8' })
       .filter((file) => file.endsWith('.routes.ts'))
@@ -30,7 +29,6 @@ describe('OpenAPI document and routes stay in sync', () => {
     for (const { method, path: route } of documentedEndpoints) {
       const url = route.replace(/\{\w+\}/g, SAMPLE_ID);
       const res = await request(app)[method as 'get'](url);
-      // Unauthenticated calls may be 400/401/404 for the resource, but never "Route not found".
       expect(res.body?.error?.message, `${method.toUpperCase()} ${route}`).not.toBe(
         'Route not found.',
       );

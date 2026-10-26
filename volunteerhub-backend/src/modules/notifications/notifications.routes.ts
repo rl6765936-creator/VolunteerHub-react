@@ -7,7 +7,6 @@ import { currentUser, requireAuth } from '../../middleware/auth.js';
 
 export const listNotificationsQuery = paginationQuery.extend({ unreadOnly: queryBoolean });
 
-/** In-app notifications. Users only ever see their own. */
 export function createNotificationsRouter({ prisma }: AppDependencies): Router {
   const router = Router();
   router.use(requireAuth);

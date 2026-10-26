@@ -1,12 +1,5 @@
 import type { CSSProperties } from "react";
 
-/**
- * The living background behind every page: drifting clouds, warm blurred lights, soap bubbles,
- * bouncing hearts, twinkling sparkles and falling glitter. Purely decorative (aria-hidden,
- * pointer-events: none). Positions come from a small seeded random, computed once when the
- * module loads, so renders stay pure and the layout is the same on every visit.
- */
-
 let seed = 7;
 const rnd = () => {
   seed = (seed * 9301 + 49297) % 233280;

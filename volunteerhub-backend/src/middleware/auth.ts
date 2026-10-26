@@ -22,12 +22,6 @@ function bearerToken(req: Request): string | null {
   return token;
 }
 
-/**
- * Resolves the current user from the Bearer token. The user is always loaded from the
- * database, so role changes, blocking and deleted accounts take effect immediately.
- * A missing token leaves `req.user` unset; an invalid token is always a 401, and a token of
- * a blocked account is a 403 ACCOUNT_BLOCKED.
- */
 export function authenticate(prisma: Db, jwtSecret: string): RequestHandler {
   return async (req, _res, next) => {
     const token = bearerToken(req);
@@ -68,7 +62,6 @@ export const requireAdmin: RequestHandler = (req, _res, next) => {
   else next();
 };
 
-/** For handlers mounted behind requireAuth: returns the user or throws 401. */
 export function currentUser(req: Request): AuthUser {
   if (!req.user) throw errors.unauthorized();
   return req.user;

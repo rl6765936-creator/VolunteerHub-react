@@ -14,7 +14,6 @@ export const auditLogQuery = paginationQuery.extend({
   actorId: z.uuid().optional(),
 });
 
-/** /api/users/me/dashboard and /api/users/me/matches. */
 export function createMyDashboardRouter({ env, prisma }: AppDependencies): Router {
   const router = Router();
   router.use(requireAuth);
@@ -35,7 +34,6 @@ export function createMyDashboardRouter({ env, prisma }: AppDependencies): Route
   return router;
 }
 
-/** Mounted under /api/admin (admin only). */
 export function createDashboardAdminRouter({ prisma }: AppDependencies): Router {
   const router = Router();
 

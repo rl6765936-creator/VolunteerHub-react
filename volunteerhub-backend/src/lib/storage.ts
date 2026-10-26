@@ -1,9 +1,3 @@
-/**
- * Image type detection for uploads. The images themselves are stored in the database
- * (MediaAttachment.data), not on disk.
- */
-
-/** Allowed image types, identified by their magic bytes (the client's Content-Type is ignored). */
 const SIGNATURES: { mimeType: string; extension: string; matches: (b: Buffer) => boolean }[] = [
   {
     mimeType: 'image/jpeg',

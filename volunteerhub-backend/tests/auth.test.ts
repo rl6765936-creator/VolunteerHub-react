@@ -16,10 +16,6 @@ beforeEach(resetDb);
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
-/**
- * The exact contract used by the VoiceUp React frontend (AuthContext, authApi, Login,
- * Register, ProtectedRoute), so those components work against VolunteerHub unchanged.
- */
 describe('VoiceUp frontend auth contract', () => {
   it('register returns { data: { user, accessToken, tokenType, expiresIn } } with status 201', async () => {
     const res = await request(app)

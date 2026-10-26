@@ -1,7 +1,4 @@
-﻿# VolunteerHub local setup for Windows. Safe to run again: it never drops databases or deletes data.
-# Every password is typed by you in this window. Nothing secret is shown, logged or sent anywhere.
-# Native tools (npm, psql) write warnings to stderr; failures are checked through exit codes.
-$ErrorActionPreference = 'Continue'
+﻿$ErrorActionPreference = 'Continue'
 $root = Split-Path -Parent $PSScriptRoot
 $log = Join-Path $PSScriptRoot 'setup-volunteerhub.txt'
 Set-Location $root
@@ -112,7 +109,6 @@ SEED_ADMIN_NAME=VolunteerHub Admin
     Log 'npm install failed (probably a blocked Prisma download). Retrying without install scripts...'
     npm install --ignore-scripts 2>&1 | Write-Host
     if ($LASTEXITCODE -ne 0) { throw 'npm install failed.' }
-    # Generating the client does not need the blocked engine; point Prisma at an existing file.
     $env:PRISMA_SCHEMA_ENGINE_BINARY = (Get-Command node).Source
     npx prisma generate 2>&1 | Tee-Object -Variable out | Write-Host
     Add-Content -Encoding utf8 $log ($out | Out-String)

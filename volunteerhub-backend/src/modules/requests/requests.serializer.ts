@@ -15,7 +15,6 @@ export const requestSummaryInclude = {
 
 type RequestSummaryRow = Prisma.HelpRequestGetPayload<{ include: typeof requestSummaryInclude }>;
 
-/** List item. Never contains the address or any contact details. */
 export function serializeRequestSummary(row: RequestSummaryRow, options: { own?: boolean } = {}) {
   return {
     id: row.id,
@@ -37,11 +36,6 @@ export function serializeRequestSummary(row: RequestSummaryRow, options: { own?:
   };
 }
 
-/**
- * Detail view. Contact privacy: the address and the requester's contact details are shown
- * only to the owner, admins and the volunteer whose offer was accepted. The accepted
- * volunteer's contact details are shown only to the owner and admins.
- */
 export function serializeRequestDetail(row: RequestDetail, access: RequestAccess) {
   const accepted = row.offers.find((offer) => offer.status === 'ACCEPTED');
   const ownerOrAdmin = access.isOwner || access.isAdmin;

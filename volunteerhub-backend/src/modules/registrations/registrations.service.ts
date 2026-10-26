@@ -9,12 +9,6 @@ import { loadVisibleTask } from '../tasks/taskAccess.js';
 const alreadyRegistered = () =>
   new AppError(409, ErrorCodes.ALREADY_EXISTS, 'You are already registered for this task.');
 
-/**
- * Automatic registration: no approval step and no pending state. The task row is locked
- * (SELECT ... FOR UPDATE) before counting confirmed registrations, so concurrent requests
- * for the last place are serialized and capacity is never exceeded. A partial unique index
- * also guarantees one confirmed registration per user and task.
- */
 export async function register(prisma: Db, taskId: string, user: AuthUser) {
   try {
     return await prisma.$transaction(async (tx) => {
@@ -61,10 +55,6 @@ export async function register(prisma: Db, taskId: string, user: AuthUser) {
   }
 }
 
-/**
- * A volunteer cancels their own confirmed registration before the task starts. The row is
- * kept as CANCELLED (history), the place is freed and they may register again later.
- */
 export async function cancelRegistration(prisma: Db, taskId: string, user: AuthUser) {
   return prisma.$transaction(async (tx) => {
     if (!(await lockVolunteerTask(tx, taskId))) throw errors.notFound('Task');

@@ -11,7 +11,6 @@ import { AuditActions, writeAudit } from '../audit/audit.service.js';
 import { password } from '../auth/auth.schemas.js';
 import { adminUserSelect, meSelect } from './users.dto.js';
 
-/** Digits, spaces, dashes, parentheses and an optional leading "+". */
 export const phone = z
   .string()
   .trim()
@@ -50,7 +49,6 @@ export function createUsersRouter({ prisma }: AppDependencies): Router {
     res.json({ data: user });
   });
 
-  /** Users can change their display name and contact phone. Email, role and status cannot. */
   router.patch('/me', async (req, res) => {
     const body = updateMeBody.parse(req.body);
     const user = await prisma.user.update({
@@ -84,7 +82,6 @@ export function createUsersRouter({ prisma }: AppDependencies): Router {
   return router;
 }
 
-/** Mounted under /api/admin/users (admin only). */
 export function createUsersAdminRouter({ prisma }: AppDependencies): Router {
   const router = Router();
 
@@ -112,7 +109,6 @@ export function createUsersAdminRouter({ prisma }: AppDependencies): Router {
     res.json({ data: users, meta: pageMeta(query, total) });
   });
 
-  /** Admins see the full profile, including the private availability. */
   router.get('/:id', async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: parseId(req.params.id) },
@@ -125,10 +121,6 @@ export function createUsersAdminRouter({ prisma }: AppDependencies): Router {
     res.json({ data: user });
   });
 
-  /**
-   * Changes a user's role and/or status (block or unblock). Admins cannot change their own
-   * account, so VolunteerHub can never be left without an admin by accident.
-   */
   router.patch('/:id', async (req, res) => {
     const id = parseId(req.params.id);
     const body = updateUserBody.parse(req.body);

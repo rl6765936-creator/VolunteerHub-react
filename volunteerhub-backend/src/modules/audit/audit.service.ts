@@ -26,7 +26,6 @@ export interface AuditEntry {
   metadata?: Prisma.InputJsonObject;
 }
 
-/** Records a sensitive admin action. Call it inside the same transaction as the action. */
 export async function writeAudit(db: DbClient, entry: AuditEntry): Promise<void> {
   await db.auditLog.create({
     data: {

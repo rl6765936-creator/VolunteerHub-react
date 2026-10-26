@@ -33,14 +33,6 @@ const withUrl = <T extends { id: string }>(attachment: T) => ({
   url: `/api/attachments/${attachment.id}/file`,
 });
 
-/**
- * Images for help requests: JPEG, PNG or WebP (detected from the file's bytes), up to 5 MB
- * each and 5 per request. The owner adds or removes images while the request is open; a new
- * image is material content, so an approved request goes back to moderation. The image bytes
- * are stored in the database (MediaAttachment.data) and served only through
- * GET /api/attachments/:id/file, with the same visibility as the request. Lists never select
- * the bytes.
- */
 export function createAttachmentsRouter({ env, prisma }: AppDependencies): Router {
   const router = Router();
 
@@ -62,7 +54,6 @@ export function createAttachmentsRouter({ env, prisma }: AppDependencies): Route
     async (req, res) => {
       const user = currentUser(req);
       const id = parseId(req.params.id);
-      // Cheap checks first; they are repeated under the row lock below.
       const { access } = await loadVisibleRequest(prisma, id, user);
       if (!access.isOwner) throw errors.forbidden('Only the owner can add images.');
       const file = req.file;
@@ -97,7 +88,6 @@ export function createAttachmentsRouter({ env, prisma }: AppDependencies): Route
             uploaderId: user.id,
             mimeType: type.mimeType,
             sizeBytes: file.size,
-            // A copy as a plain Uint8Array, the type Prisma expects for Bytes.
             data: new Uint8Array(file.buffer),
           },
           select: attachmentSelect,
@@ -161,7 +151,6 @@ export function createAttachmentsRouter({ env, prisma }: AppDependencies): Route
     res.end(body);
   });
 
-  /** The owner removes images while the request is open; admins remove any (audit-logged). */
   router.delete('/attachments/:id', requireAuth, async (req, res) => {
     const user = currentUser(req);
     const id = parseId(req.params.id);

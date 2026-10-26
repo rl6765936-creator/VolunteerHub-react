@@ -10,7 +10,6 @@ export default function AdminHelpRequestsPage() {
     const { data, isLoading, isError } = useAdminHelpRequests();
     const { mutate: approve, isPending, variables, isError: approveFailed } = useApproveHelpRequest();
     const { mutate: reject, isPending: isRejecting, isError: rejectFailed } = useRejectHelpRequest();
-    // Which request currently shows the rejection-reason box (replaces window.prompt).
     const [rejectingId, setRejectingId] = useState<string | null>(null);
 
     const handleReject = (requestId: string, reason: string) => {

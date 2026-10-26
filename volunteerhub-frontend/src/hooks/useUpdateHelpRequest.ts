@@ -26,7 +26,6 @@ const useUpdateHelpRequest = () => {
         queryKey: ["myHelpRequests", user?.id],
       });
 
-      // An edit of an approved request sends it back to review, so the public list changes too.
       queryClient.invalidateQueries({
         queryKey: ["helpRequests"],
       });

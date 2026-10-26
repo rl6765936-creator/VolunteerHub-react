@@ -17,7 +17,6 @@ const positiveInt = (fallback: number) => z.coerce.number().int().positive().def
 const envSchema = z
   .object({
     NODE_ENV: z.enum(NODE_ENVS).default('development'),
-    /** 3001 by default so VolunteerHub can run next to VoiceUp (3000). */
     PORT: z.coerce.number().int().min(1).max(65535).default(3001),
     LOG_LEVEL: z.enum(LOG_LEVELS).optional(),
     CORS_ORIGINS: z
@@ -39,15 +38,11 @@ const envSchema = z
       .regex(/^postgres(ql)?:\/\//, 'must be a postgresql:// connection string'),
 
     JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
-    /** Access token lifetime in seconds. Default: 2 hours. */
     JWT_EXPIRES_IN_SECONDS: positiveInt(2 * 60 * 60),
 
-    /** Stricter per-IP limit for register/login, within RATE_LIMIT_WINDOW_MS. */
     AUTH_RATE_LIMIT_MAX: positiveInt(20),
-    /** Per-IP limit for creating requests, offers and tasks and for uploads, per hour. */
     WRITE_RATE_LIMIT_MAX: positiveInt(30),
 
-    /** IANA time zone used to match task days with volunteers' available weekdays. */
     TIME_ZONE: z
       .string()
       .default('Asia/Jerusalem')
@@ -74,10 +69,6 @@ export class EnvValidationError extends Error {
   }
 }
 
-/**
- * Parses and validates environment variables. Error messages list the offending variable
- * names and reasons only, never their values, so secrets cannot leak into logs.
- */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const result = envSchema.safeParse(source);
   if (!result.success) {

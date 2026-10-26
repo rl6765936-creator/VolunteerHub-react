@@ -1,6 +1,3 @@
-/**
- * Stable, machine-readable error codes. Clients should rely on `code`, not on `message`.
- */
 export const ErrorCodes = {
   BAD_REQUEST: 'BAD_REQUEST',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -26,7 +23,6 @@ export const ErrorCodes = {
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 
-/** An error that is safe to show to the client: its message and details are returned as-is. */
 export class AppError extends Error {
   readonly status: number;
   readonly code: ErrorCode;
@@ -41,7 +37,6 @@ export class AppError extends Error {
   }
 }
 
-/** Shorthands for the errors used throughout the services. */
 export const errors = {
   unauthorized: (message = 'Authentication is required.') =>
     new AppError(401, ErrorCodes.UNAUTHORIZED, message),
@@ -54,7 +49,6 @@ export const errors = {
     new AppError(400, ErrorCodes.BAD_REQUEST, message, details),
 };
 
-/** Shape of every error response body: `{ error: { code, message, details? } }`. */
 export interface ErrorBody {
   error: {
     code: ErrorCode;

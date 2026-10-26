@@ -5,7 +5,6 @@ type Step = {
 
 type StepLadderProps = {
   steps: Step[];
-  /** Read by screen readers instead of the drawing. */
   ariaLabel: string;
   orientation?: "vertical" | "horizontal";
   big?: boolean;
@@ -13,7 +12,6 @@ type StepLadderProps = {
   showLabels?: boolean;
 };
 
-/** A small pink ladder whose rungs light up, bottom to top (or right to left), as steps are done. */
 const StepLadder = ({
   steps,
   ariaLabel,

@@ -4,7 +4,6 @@ import type { AppDependencies } from '../../deps.js';
 export function createHealthRouter({ prisma, logger }: AppDependencies): Router {
   const router = Router();
 
-  /** Liveness: the process is up. Never touches the database. */
   router.get('/', (_req, res) => {
     res.json({
       data: {
@@ -16,7 +15,6 @@ export function createHealthRouter({ prisma, logger }: AppDependencies): Router 
     });
   });
 
-  /** Readiness: the database answers. Returns 503 when it does not. */
   router.get('/ready', async (_req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;

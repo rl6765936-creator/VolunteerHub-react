@@ -21,10 +21,6 @@ function writeToStdout(line: string): void {
   process.stdout.write(`${line}\n`);
 }
 
-/**
- * Minimal structured (JSON lines) logger. Callers must never pass passwords, tokens,
- * request bodies or other sensitive data as fields.
- */
 export function createLogger(
   level: LogLevel,
   write: (line: string) => void = writeToStdout,

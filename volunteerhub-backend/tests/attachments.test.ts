@@ -54,7 +54,6 @@ describe('request images', () => {
     expect(file.headers['x-content-type-options']).toBe('nosniff');
     expect(Buffer.from(file.body as Buffer).equals(PNG)).toBe(true);
 
-    // The image is stored in the database, and lists never include the bytes.
     const stored = await testPrisma().mediaAttachment.findFirstOrThrow();
     expect(Buffer.from(stored.data).equals(PNG)).toBe(true);
     expect(res.body.data).not.toHaveProperty('data');

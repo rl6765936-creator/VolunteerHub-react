@@ -38,7 +38,6 @@ async function detail(prisma: Db, id: string, req: Request) {
   return serializeTask(task, { access });
 }
 
-/** /api/tasks: public search of approved tasks, creator actions and registration. */
 export function createTasksRouter({ env, prisma }: AppDependencies): Router {
   const router = Router();
 
@@ -121,8 +120,6 @@ export function createTasksRouter({ env, prisma }: AppDependencies): Router {
     });
   });
 
-  // Registrations
-
   router.post('/:id/registrations', requireAuth, async (req, res) => {
     const registration = await register(prisma, parseId(req.params.id), currentUser(req));
     res.status(201).json({ data: registration });
@@ -133,7 +130,6 @@ export function createTasksRouter({ env, prisma }: AppDependencies): Router {
     res.json({ data: registration });
   });
 
-  /** The creator and admins see who registered: name and email only, never availability. */
   router.get('/:id/registrations', requireAuth, async (req, res) => {
     const id = parseId(req.params.id);
     const { status } = registrationsQuery.parse(req.query);
@@ -158,7 +154,6 @@ export function createTasksRouter({ env, prisma }: AppDependencies): Router {
   return router;
 }
 
-/** /api/users/me/tasks and /api/users/me/registrations. */
 export function createMyTasksRouter({ prisma }: AppDependencies): Router {
   const router = Router();
   router.use(requireAuth);
@@ -225,7 +220,6 @@ export function createMyTasksRouter({ prisma }: AppDependencies): Router {
   return router;
 }
 
-/** /api/admin/tasks: the moderation queue and decisions. */
 export function createTasksAdminRouter({ prisma }: AppDependencies): Router {
   const router = Router();
 

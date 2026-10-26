@@ -6,7 +6,6 @@ import { resetDb, testPrisma } from './helpers/setup.js';
 import { TEST_DATABASE_URL } from './helpers/testDatabase.js';
 
 const run = promisify(execFile);
-// Runs the tsx CLI with the current Node binary: `npx` cannot be spawned directly on Windows.
 const tsxCli = path.resolve(import.meta.dirname, '../node_modules/tsx/dist/cli.mjs');
 const seed = (extra: Record<string, string> = {}) =>
   run(process.execPath, [tsxCli, 'prisma/seed.ts'], {

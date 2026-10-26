@@ -11,11 +11,6 @@ const futureDate = z.coerce
 export const MAX_CAPACITY = 1000;
 const capacity = z.coerce.number().int().min(1).max(MAX_CAPACITY);
 
-/**
- * Material fields: changing any of them on a published task requires re-moderation and
- * notifies registered volunteers. Capacity is not material (but can never drop below the
- * number of confirmed registrations).
- */
 export const MATERIAL_TASK_FIELDS = [
   'title',
   'description',
@@ -67,9 +62,7 @@ export const listTasksQuery = paginationQuery.extend({
   status: z.enum(TaskStatus).default('OPEN'),
   from: z.coerce.date().optional(),
   to: z.coerce.date().optional(),
-  /** Only tasks that still have free places. */
   availableOnly: queryBoolean,
-  /** Include tasks that already started (default: upcoming only). */
   includePast: queryBoolean,
   sort: taskSort,
 });
@@ -92,6 +85,5 @@ export const registrationsQuery = z.object({
 
 export const myRegistrationsQuery = paginationQuery.extend({
   status: z.enum(RegistrationStatus).optional(),
-  /** Only registrations for tasks that have not started yet. */
   upcomingOnly: queryBoolean,
 });

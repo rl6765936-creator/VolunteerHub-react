@@ -16,7 +16,6 @@ import {
 import { createMyTasksRouter, createTasksRouter } from './modules/tasks/tasks.routes.js';
 import { createUsersRouter } from './modules/users/users.routes.js';
 
-/** Root of the API, mounted at /api. Each feature module contributes its own router. */
 export function createApiRouter(deps: AppDependencies): Router {
   const router = Router();
 

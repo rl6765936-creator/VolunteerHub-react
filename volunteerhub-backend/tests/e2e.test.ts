@@ -9,10 +9,6 @@ import {
   testPrisma,
 } from './helpers/setup.js';
 
-/**
- * End-to-end workflows through the public API only (plus one direct promotion to admin,
- * which in production is done by the seed). These are the demo scenarios of the spec.
- */
 const app = buildApp();
 
 beforeEach(resetDb);
@@ -126,13 +122,11 @@ describe('end-to-end workflows', () => {
     const blocked = await request(app).post(`/api/tasks/${taskId}/registrations`).set(third.auth);
     expect(blocked.body.error.code).toBe('TASK_FULL');
 
-    // A volunteer cancels, the place goes to the third one.
     await request(app).delete(`/api/tasks/${taskId}/registrations/me`).set(second.auth);
     expect(
       (await request(app).post(`/api/tasks/${taskId}/registrations`).set(third.auth)).status,
     ).toBe(201);
 
-    // Schedule change: registrations kept, volunteers notified, re-approval needed.
     const edited = await request(app)
       .patch(`/api/tasks/${taskId}`)
       .set(creator.auth)

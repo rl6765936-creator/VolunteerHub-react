@@ -8,7 +8,6 @@ const futureDate = z.coerce
   .date()
   .refine((date) => date.getTime() > Date.now(), 'must be in the future');
 
-/** Every editable field is material content, so any change to a published request is re-moderated. */
 export const createRequestBody = z
   .object({
     title: text(3, 120),

@@ -5,12 +5,10 @@ import type { Logger } from '../lib/logger.js';
 import { prismaErrorCode } from '../lib/prisma.js';
 import multer from 'multer';
 
-/** Forwards unmatched requests to the error handler as a 404. */
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(new AppError(404, ErrorCodes.NOT_FOUND, 'Route not found.'));
 };
 
-/** Errors raised by Express/body-parser carry an HTTP status and a type. */
 function isHttpError(error: unknown): error is { status: number; type?: string } {
   return (
     typeof error === 'object' &&
@@ -67,10 +65,6 @@ function toAppError(error: unknown): AppError | null {
   return null;
 }
 
-/**
- * Centralized error handler. Known errors are translated into the standard error body.
- * Anything unexpected becomes a generic 500: details are logged, never sent to the client.
- */
 export function createErrorHandler(logger: Logger): ErrorRequestHandler {
   return (error, req, res, next) => {
     if (res.headersSent) {

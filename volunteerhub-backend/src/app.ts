@@ -9,11 +9,6 @@ import { createApiRouter } from './routes.js';
 
 export type { AppDependencies } from './deps.js';
 
-/**
- * Builds the Express application without starting a server, so tests can use it directly.
- * Order matters: logging, security headers, CORS, rate limiting, body parsing, docs,
- * authentication, routes, 404, and finally the error handler.
- */
 export function createApp(deps: AppDependencies): Express {
   const { env, logger, prisma } = deps;
   const app = express();

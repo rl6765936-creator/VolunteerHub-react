@@ -10,7 +10,6 @@ type RejectReasonBoxProps = {
 const MIN = 5;
 const MAX = 500;
 
-/** Replaces window.prompt for the rejection reason. Same rule as the server: 5–500 characters. */
 const RejectReasonBox = ({ requestId, isPending, onSubmit, onCancel }: RejectReasonBoxProps) => {
   const [reason, setReason] = useState("");
   const text = reason.trim();

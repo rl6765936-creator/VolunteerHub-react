@@ -7,7 +7,6 @@ import { createRequestsAdminRouter } from '../requests/requests.routes.js';
 import { createTasksAdminRouter } from '../tasks/tasks.routes.js';
 import { createUsersAdminRouter } from '../users/users.routes.js';
 
-/** Everything under /api/admin requires the ADMIN role, checked on every request. */
 export function createAdminRouter(deps: AppDependencies): Router {
   const router = Router();
   router.use(requireAdmin);

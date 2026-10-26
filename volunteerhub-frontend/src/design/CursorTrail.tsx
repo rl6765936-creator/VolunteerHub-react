@@ -1,12 +1,5 @@
 import { useEffect, useRef } from "react";
 
-/**
- * Tiny hearts and stars that float out of the mouse pointer, plus a small burst on every click.
- * Decorative only: the particles live in a fixed, click-through layer and are added and removed
- * directly in the DOM (no React state), so moving the mouse never re-renders the app.
- * Off for touch input and for users who prefer reduced motion.
- */
-
 const HEART =
   '<svg viewBox="0 0 200 180" aria-hidden="true"><path fill="currentColor" d="M100 170 C 40 125 5 90 5 52 C 5 22 28 5 54 5 C 75 5 92 17 100 34 C 108 17 125 5 146 5 C 172 5 195 22 195 52 C 195 90 160 125 100 170 Z"/></svg>';
 const STAR =

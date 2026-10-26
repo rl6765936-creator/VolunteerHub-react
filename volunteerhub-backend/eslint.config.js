@@ -26,12 +26,10 @@ export default defineConfig(
     },
   },
   {
-    // Plain JS config files are not part of the TypeScript project.
     files: ['**/*.js'],
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
-    // Supertest response bodies are untyped (`any`) by design; the assertions check their shape.
     files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-member-access': 'off',

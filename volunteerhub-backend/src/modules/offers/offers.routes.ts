@@ -23,7 +23,6 @@ async function offerView(prisma: Db, id: string, user: AuthUser) {
   return serializeOffer(offer, { showContact: access.isOwner || access.isAdmin });
 }
 
-/** Mounted under /api: offers on requests, decisions and my offers. */
 export function createOffersRouter({ env, prisma }: AppDependencies): Router {
   const router = Router();
 
@@ -38,7 +37,6 @@ export function createOffersRouter({ env, prisma }: AppDependencies): Router {
     res.status(201).json({ data: await offerView(prisma, id, user) });
   });
 
-  /** The owner and admins see every offer; any other user sees only their own offers. */
   router.get('/requests/:id/offers', requireAuth, async (req, res) => {
     const user = currentUser(req);
     const requestId = parseId(req.params.id);

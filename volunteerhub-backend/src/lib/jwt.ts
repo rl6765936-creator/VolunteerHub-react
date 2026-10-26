@@ -17,7 +17,6 @@ export function signAccessToken(userId: string, config: TokenConfig): string {
   });
 }
 
-/** Returns the user id from a valid token, or null for any invalid/expired/tampered token. */
 export function verifyAccessToken(token: string, secret: string): string | null {
   try {
     const payload = jwt.verify(token, secret, { algorithms: [ALGORITHM], issuer: ISSUER });

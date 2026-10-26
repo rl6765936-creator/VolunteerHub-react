@@ -167,13 +167,11 @@ describe('accepting offers', () => {
       acceptedVolunteer: { id: volunteer.id, email: volunteer.email },
     });
 
-    // The accepted volunteer now sees the requester's address and contact details...
     const asVolunteer = await request(app).get(`/api/requests/${requestId}`).set(volunteer.auth);
     expect(asVolunteer.body.data.privateDetails).toEqual({
       addressDetails: 'Herzl 10, apartment 4',
       contact: { name: 'Requester', email: owner.email, phone: '050-0000001' },
     });
-    // ...but the declined volunteer and the public do not.
     const asDeclined = await request(app).get(`/api/requests/${requestId}`).set(second.auth);
     expect(asDeclined.body.data.privateDetails).toBeNull();
     expect(asDeclined.body.data.acceptedVolunteer).toBeNull();

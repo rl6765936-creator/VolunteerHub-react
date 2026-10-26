@@ -35,7 +35,6 @@ const getStatusLabel = (status: HelpRequestStatus) => {
   }
 };
 
-/** Design only: a chip colour per status / moderation state. */
 const statusChip = (status: HelpRequestStatus) =>
   status === "OPEN" ? "vh-chip vh-chip--teal" : status === "IN_PROGRESS" ? "vh-chip vh-chip--amber" : status === "COMPLETED" ? "vh-chip vh-chip--mint" : "vh-chip";
 const moderationChip = (status: ModerationStatus) =>

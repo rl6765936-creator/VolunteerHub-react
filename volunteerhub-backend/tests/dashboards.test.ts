@@ -75,7 +75,6 @@ describe('admin dashboard', () => {
   });
 
   it('computes moderation, activity and success metrics', async () => {
-    // Requests: one completed through an accepted offer, one open, one pending, one cancelled.
     const completed = await createHelpRequest(app, owner, categoryId, { approve: admin });
     const offer = await request(app)
       .post(`/api/requests/${completed}/offers`)
@@ -90,7 +89,6 @@ describe('admin dashboard', () => {
     const cancelled = await createHelpRequest(app, owner, categoryId, { approve: admin });
     await request(app).post(`/api/requests/${cancelled}/cancel`).set(owner.auth).send({});
 
-    // Tasks: one full, one with free places, one pending.
     const full = await createTask(app, owner, categoryId, {
       approve: admin,
       body: { capacity: 1 },
@@ -176,7 +174,6 @@ describe('my dashboard', () => {
 
 describe('matches', () => {
   it('converts dates to weekdays in the configured time zone', () => {
-    // Sunday 22:30 UTC is already Monday 00:30 in Jerusalem (UTC+2 in January).
     expect(weekdayIn(new Date('2030-01-06T22:30:00Z'), 'Asia/Jerusalem')).toBe('MON');
     expect(weekdayIn(new Date('2030-01-06T22:30:00Z'), 'UTC')).toBe('SUN');
   });

@@ -23,7 +23,6 @@ function issue(user: PrivateUser, config: TokenConfig): AuthResult {
   };
 }
 
-/** Self-registration always creates an ACTIVE USER. Any `role` in the request body is ignored. */
 export async function register(
   prisma: Db,
   input: z.output<typeof registerBody>,
@@ -44,10 +43,6 @@ export async function register(
   }
 }
 
-/**
- * One generic error for wrong email and wrong password, so emails cannot be enumerated.
- * A blocked account is reported only after the correct password was given.
- */
 export async function login(
   prisma: Db,
   input: z.output<typeof loginBody>,

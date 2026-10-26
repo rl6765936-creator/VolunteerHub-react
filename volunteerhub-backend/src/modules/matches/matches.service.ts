@@ -10,18 +10,11 @@ const WEEKDAYS: Weekday[] = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const CANDIDATES = 200;
 export const MATCH_LIMIT = 20;
 
-/** The weekday of a date in the configured time zone. */
 export function weekdayIn(date: Date, timeZone: string): Weekday {
   const short = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone }).format(date);
   return WEEKDAYS[['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(short)] ?? 'SUN';
 }
 
-/**
- * Rule-based matching (no AI): published, open tasks and requests that fit the volunteer's
- * profile. Each filter applies only when the profile sets it:
- * region (contains), interest categories, and available weekdays (tasks only).
- * Own items, full tasks and items the user already registered for or offered on are excluded.
- */
 export async function getMatches(prisma: Db, userId: string, timeZone: string) {
   const profile = await prisma.volunteerProfile.findUnique({
     where: { userId },

@@ -1,5 +1,3 @@
-// Types of the help-offer API (POST/GET /api/requests/:id/offers, POST /api/offers/:id/accept).
-
 export type OfferStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "WITHDRAWN";
 
 export type HelpOffer = {
@@ -16,7 +14,6 @@ export type HelpOffer = {
     region: string | null;
   };
 
-  /** Only on the accepted offer, and only for the request owner (and admins). */
   contact: { email: string; phone: string | null } | null;
 };
 

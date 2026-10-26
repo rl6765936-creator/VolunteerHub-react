@@ -4,7 +4,6 @@ import path from 'node:path';
 import { parseEnv } from 'node:util';
 import pg from 'pg';
 
-/** DATABASE_URL_TEST from the local .env file, if any (only this one variable is read). */
 function fromDotEnv(): string | undefined {
   try {
     return parseEnv(readFileSync(path.resolve(import.meta.dirname, '../../.env'), 'utf8'))
@@ -19,7 +18,6 @@ export const TEST_DATABASE_URL =
   fromDotEnv() ??
   'postgresql://volunteerhub:volunteerhub@localhost:5432/volunteerhub_test';
 
-/** Refuses to touch any database whose name does not end in "_test". */
 export function assertTestDatabase(url: string): void {
   const name = new URL(url).pathname.replace(/^\//, '');
   if (!name.endsWith('_test')) {
@@ -27,7 +25,6 @@ export function assertTestDatabase(url: string): void {
   }
 }
 
-/** Drops everything and applies the Prisma migrations in order, exactly as deployed. */
 export async function recreateSchema(url: string): Promise<void> {
   assertTestDatabase(url);
   const migrationsDir = path.resolve(import.meta.dirname, '../../prisma/migrations');

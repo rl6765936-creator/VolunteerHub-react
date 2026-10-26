@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { resetDb, testPrisma } from './helpers/setup.js';
 
-/**
- * The migrations add CHECK constraints and partial unique indexes that Prisma cannot model.
- * These tests prove they exist in the real PostgreSQL schema, independent of the services.
- */
 const db = () => testPrisma();
 
 async function seedBase() {

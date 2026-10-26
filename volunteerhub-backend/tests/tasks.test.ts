@@ -170,7 +170,6 @@ describe('automatic registration', () => {
       approve: admin,
       body: { capacity: 3 },
     });
-    // Two places are taken; eight volunteers race for the last one.
     await registerAs(id, volunteer);
     await registerAs(id, await createUser());
     const racers = await Promise.all(Array.from({ length: 8 }, () => createUser()));
@@ -336,7 +335,6 @@ describe('editing tasks', () => {
       where: { taskId: id, status: 'CONFIRMED' },
     });
     const task = await testPrisma().volunteerTask.findUniqueOrThrow({ where: { id } });
-    // Whatever the interleaving, the invariant holds.
     expect(confirmed).toBeLessThanOrEqual(task.capacity);
     expect(confirmed).toBe(1 + registrations.filter((res) => res.status === 201).length);
     if (shrink?.status === 200) expect(task.capacity).toBe(3);
@@ -357,7 +355,6 @@ describe('editing tasks', () => {
       registrationOpen: false,
     });
 
-    // Hidden publicly, still visible to the registered volunteer.
     expect((await get(id)).status).toBe(404);
     expect((await get(id, volunteer)).body.data.viewer.myRegistration.status).toBe('CONFIRMED');
     const notification = await testPrisma().notification.findFirst({
@@ -387,7 +384,6 @@ describe('editing tasks', () => {
     expect(notification?.message).toContain('start time');
     expect(notification?.message).toContain('Your registration is kept');
 
-    // New registrations stay blocked until an admin re-approves the task.
     const newcomer = await createUser();
     expect((await registerAs(id, newcomer)).status).toBe(404);
     await request(app).post(`/api/admin/tasks/${id}/approve`).set(admin.auth).send({});
@@ -431,7 +427,6 @@ describe('cancelling and completing tasks', () => {
       where: { userId: volunteer.id, type: 'TASK_CANCELLED' },
     });
     expect(notification?.message).toContain('The hall is unavailable');
-    // The registration row is preserved as history.
     expect(await testPrisma().taskRegistration.count({ where: { taskId: id } })).toBe(1);
 
     const history = await request(app).get(`/api/tasks/${id}/history`).set(creator.auth);

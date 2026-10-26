@@ -2,10 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import useAuth from "./useAuth";
 import { getHelpRequest } from "../services/helpRequestsApi";
 
-/**
- * One request with its detail view. Used by the edit page: unlike VoiceUp, the list items
- * never include the address, so the form has to load it from the detail endpoint.
- */
 const useHelpRequest = (requestId: string | undefined) => {
   const { token } = useAuth();
 

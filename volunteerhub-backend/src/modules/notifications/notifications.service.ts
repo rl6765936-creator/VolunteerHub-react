@@ -10,15 +10,10 @@ export interface NotificationInput {
 
 const MAX_MESSAGE = 300;
 
-/** Shortens user-provided titles so they fit into a notification message. */
 export function quote(title: string, max = 80): string {
   return `"${title.length > max ? `${title.slice(0, max - 1)}…` : title}"`;
 }
 
-/**
- * Creates one in-app notification per recipient (duplicates removed). The acting user is
- * never notified about their own action. Call it inside the transaction of the change.
- */
 export async function notify(
   db: DbClient,
   recipientIds: (string | null | undefined)[],

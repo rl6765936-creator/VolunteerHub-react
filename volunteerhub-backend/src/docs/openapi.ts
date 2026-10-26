@@ -51,7 +51,6 @@ interface Endpoint {
   query?: ZodObject;
   status?: number;
   multipart?: boolean;
-  /** Overrides the default access note. */
   description?: string;
 }
 
@@ -73,7 +72,6 @@ const errorBody = z.object({
 
 const P = '/api';
 
-/** Every documented operation. Feature phases add their endpoints here. */
 const endpoints: Endpoint[] = [
   {
     method: 'get',
@@ -90,7 +88,6 @@ const endpoints: Endpoint[] = [
     access: 'public',
   },
 
-  // Auth and current user (same contract as VoiceUp)
   {
     method: 'post',
     path: `${P}/auth/register`,
@@ -155,7 +152,6 @@ const endpoints: Endpoint[] = [
       'Requires a Bearer token. Availability (days and notes) is private: only you and admins can read it.',
   },
 
-  // Categories
   {
     method: 'get',
     path: `${P}/categories`,
@@ -182,7 +178,6 @@ const endpoints: Endpoint[] = [
     body: updateCategoryBody,
   },
 
-  // Help requests
   {
     method: 'get',
     path: `${P}/requests`,
@@ -254,7 +249,6 @@ const endpoints: Endpoint[] = [
     query: myRequestsQuery,
   },
 
-  // Help offers
   {
     method: 'post',
     path: `${P}/requests/{id}/offers`,
@@ -307,7 +301,6 @@ const endpoints: Endpoint[] = [
     query: myOffersQuery,
   },
 
-  // Images
   {
     method: 'get',
     path: `${P}/requests/{id}/attachments`,
@@ -344,7 +337,6 @@ const endpoints: Endpoint[] = [
     status: 204,
   },
 
-  // Volunteer tasks
   {
     method: 'get',
     path: `${P}/tasks`,
@@ -415,7 +407,6 @@ const endpoints: Endpoint[] = [
     query: myTasksQuery,
   },
 
-  // Registrations
   {
     method: 'post',
     path: `${P}/tasks/{id}/registrations`,
@@ -453,7 +444,6 @@ const endpoints: Endpoint[] = [
     query: myRegistrationsQuery,
   },
 
-  // Notifications, my area and matching
   {
     method: 'get',
     path: `${P}/notifications`,
@@ -494,7 +484,6 @@ const endpoints: Endpoint[] = [
       'Rule-based, no AI: region, interest categories and available weekdays (tasks, in TIME_ZONE). Own, full and already joined items are excluded. `meta.profileComplete` is false without a profile.',
   },
 
-  // Admin: moderation of requests
   {
     method: 'get',
     path: `${P}/admin/requests`,
@@ -563,7 +552,6 @@ const endpoints: Endpoint[] = [
     query: auditLogQuery,
   },
 
-  // Admin: users
   {
     method: 'get',
     path: `${P}/admin/users`,
@@ -689,5 +677,4 @@ export function buildOpenApiDocument() {
   });
 }
 
-/** Documented operations, used by tests to keep docs and routes in sync. */
 export const documentedEndpoints = endpoints.map(({ method, path }) => ({ method, path }));

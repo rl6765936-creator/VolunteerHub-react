@@ -1,9 +1,4 @@
-﻿# VolunteerHub: (1) backup, (2) delete all data EXCEPT admin users and categories (and the
-# uploaded image files), (3) store images in the database: apply the new migration,
-# regenerate Prisma, then typecheck, lint and tests (volunteerhub_test only).
-# Stop "npm run dev" of the VolunteerHub backend (port 3001) before running this.
-# Your passwords and the DATABASE_URL are never printed or written to the log.
-$ErrorActionPreference = 'Continue'
+﻿$ErrorActionPreference = 'Continue'
 $root = Split-Path -Parent $PSScriptRoot
 $log = Join-Path $PSScriptRoot 'reset-and-images.txt'
 Set-Location $root
@@ -30,7 +25,6 @@ UNION ALL SELECT 'images', count(*) FROM "MediaAttachment"
 UNION ALL SELECT 'categories', count(*) FROM "Category";
 "@
 
-# Category is not listed, so it stays. Profiles of deleted users go with them (ON DELETE CASCADE).
 $deleteSql = @"
 BEGIN;
 TRUNCATE TABLE "AuditLog", "Notification", "MediaAttachment", "StatusHistory",
@@ -39,8 +33,6 @@ DELETE FROM "User" WHERE role <> 'ADMIN';
 COMMIT;
 "@
 
-# Windows PowerShell removes double quotes from arguments passed to psql.exe,
-# so the SQL is written to temporary files and run with psql -f.
 $utf8 = New-Object Text.UTF8Encoding($false)
 $countFile = Join-Path $env:TEMP 'volunteerhub-reset-count.sql'
 $deleteFile = Join-Path $env:TEMP 'volunteerhub-reset-delete.sql'
@@ -48,7 +40,6 @@ $deleteFile = Join-Path $env:TEMP 'volunteerhub-reset-delete.sql'
 [IO.File]::WriteAllText($deleteFile, $deleteSql, $utf8)
 
 try {
-  # 1. Which database?
   $envFile = Join-Path $root '.env'
   if (-not (Test-Path $envFile)) { throw '.env not found.' }
   foreach ($line in Get-Content $envFile) {
@@ -72,7 +63,6 @@ try {
   $uploadDir = if ($env:UPLOAD_DIR) { $env:UPLOAD_DIR } else { 'uploads' }
   if (-not [IO.Path]::IsPathRooted($uploadDir)) { $uploadDir = Join-Path $root $uploadDir }
 
-  # 2. Before (read only)
   Log '---- 2. Before:'
   $before = & $psql $env:DATABASE_URL -tAF ': ' -f $countFile
   if ($LASTEXITCODE -ne 0) { throw 'Could not read the database with psql.' }
@@ -82,7 +72,6 @@ try {
   $imageFiles = @(Get-ChildItem $uploadDir -File -ErrorAction SilentlyContinue)
   Log "  image files in uploads: $($imageFiles.Count)"
 
-  # 3. Backup
   $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
   $dump = Join-Path $PSScriptRoot "backup-volunteerhub_dev-$stamp.dump"
   Log "---- 3. Backup -> $dump"
@@ -95,14 +84,12 @@ try {
     Log "  images copied to $imgBackup"
   }
 
-  # 4. Confirmation
   Write-Host ''
   Write-Host 'This deletes all users except admins, all help requests, offers, tasks, registrations,' -ForegroundColor Yellow
   Write-Host 'images, notifications, history and the audit log. Categories are kept. A backup was made above.' -ForegroundColor Yellow
   $answer = Read-Host 'Type DELETE to continue (anything else cancels)'
   if ($answer -ne 'DELETE') { throw 'Cancelled by you. Nothing was deleted (the backup files stay).' }
 
-  # 5. Delete (one transaction: all or nothing)
   Log '---- 5. Deleting data'
   $out = & $psql $env:DATABASE_URL -v ON_ERROR_STOP=1 -f $deleteFile 2>&1
   $out | ForEach-Object { Log "  $_" }
@@ -114,7 +101,6 @@ try {
   Log '---- 6. After:'
   & $psql $env:DATABASE_URL -tAF ': ' -f $countFile | ForEach-Object { Log "  $_" }
 
-  # 7. Images in the database: migration, Prisma client, checks
   $results = [ordered]@{}
   $results['migrate deploy'] = Run '7. prisma migrate deploy' { npx prisma migrate deploy }
   if ($results['migrate deploy'] -ne 0) { throw 'The migration failed. Send me the log.' }

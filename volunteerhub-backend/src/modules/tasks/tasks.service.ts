@@ -35,7 +35,6 @@ export function taskTextSearch(q: string | undefined): Prisma.VolunteerTaskWhere
   };
 }
 
-/** Ids of tasks whose confirmed registrations already fill their capacity. */
 export async function fullTaskIds(db: DbClient): Promise<string[]> {
   const rows = await db.$queryRaw<{ id: string }[]>`
     SELECT t."id"
@@ -54,7 +53,6 @@ const confirmedRegistrantIds = async (db: DbClient, taskId: string) =>
     })
   ).map((registration) => registration.userId);
 
-/** Any user can create a task. It is not public until an admin approves it. */
 export async function createTask(
   prisma: Db,
   input: z.output<typeof createTaskBody>,
@@ -89,13 +87,6 @@ const FIELD_LABELS: Record<(typeof MATERIAL_TASK_FIELDS)[number], string> = {
   endsAt: 'end time',
 };
 
-/**
- * The creator edits an open task that has not started. Under the task's row lock:
- * - capacity can never drop below the confirmed registrations (409 CAPACITY_TOO_LOW);
- * - a material change (content, location or schedule) sends a published task back to
- *   PENDING_REVIEW. Existing registrations are kept, new ones are blocked until an admin
- *   re-approves it, and every registered volunteer is notified of what changed.
- */
 export async function updateTask(
   prisma: Db,
   id: string,
@@ -190,7 +181,6 @@ export async function updateTask(
   });
 }
 
-/** The creator or an admin cancels an open task. Registered volunteers are notified. */
 export async function cancelTask(
   prisma: Db,
   id: string,
@@ -249,7 +239,6 @@ export async function cancelTask(
   });
 }
 
-/** The creator or an admin closes a published task once it has started. */
 export async function completeTask(prisma: Db, id: string, user: AuthUser) {
   await prisma.$transaction(async (tx) => {
     if (!(await lockVolunteerTask(tx, id))) throw errors.notFound('Task');
@@ -354,7 +343,6 @@ export async function approveTask(
   });
 }
 
-/** Rejects a pending task or takes down a published one. Registered volunteers are told. */
 export async function rejectTask(
   prisma: Db,
   id: string,

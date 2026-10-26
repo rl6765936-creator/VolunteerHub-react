@@ -25,7 +25,6 @@ const CreateHelpRequestPage = () => {
     const [images, setImages] = useState<File[]>([]);
     const { data: categoriesResponse, isPending: categoriesPending, isError: categoriesError, } = useCategories();
 
-    // Design only: the progress ladder reads the same rules the validation uses.
     const [title = "", description = "", region = "", categoryId = ""] = useWatch({
         control,
         name: ["title", "description", "region", "categoryId"],
@@ -34,7 +33,6 @@ const CreateHelpRequestPage = () => {
         title.trim().length >= 3,
         description.trim().length >= 10,
         region.trim().length >= 2,
-        // an unselected radio group can be null, not just ""
         Boolean(categoryId),
     ];
 

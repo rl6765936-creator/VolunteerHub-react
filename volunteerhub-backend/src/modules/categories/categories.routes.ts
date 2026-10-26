@@ -7,9 +7,6 @@ import { isUniqueViolation, type DbClient } from '../../lib/prisma.js';
 import { currentUser, isAdmin } from '../../middleware/auth.js';
 import { AuditActions, writeAudit } from '../audit/audit.service.js';
 
-// Categories are reference data managed by admins. They are deactivated, never deleted,
-// because requests and tasks point at them.
-
 const slug = z
   .string()
   .trim()
@@ -34,7 +31,6 @@ function duplicateName(error: unknown): never {
   throw error;
 }
 
-/** Public reads. Inactive categories are hidden unless an admin asks for them. */
 export function createCategoriesRouter({ prisma }: AppDependencies): Router {
   const router = Router();
 
@@ -52,7 +48,6 @@ export function createCategoriesRouter({ prisma }: AppDependencies): Router {
   return router;
 }
 
-/** Mounted under /api/admin/categories (admin only). Every change is audit-logged. */
 export function createCategoriesAdminRouter({ prisma }: AppDependencies): Router {
   const router = Router();
 
@@ -103,7 +98,6 @@ export function createCategoriesAdminRouter({ prisma }: AppDependencies): Router
   return router;
 }
 
-/** Throws 400 unless the category exists and is active (new content needs an active one). */
 export async function assertActiveCategory(db: DbClient, categoryId: string): Promise<void> {
   const category = await db.category.findUnique({
     where: { id: categoryId },

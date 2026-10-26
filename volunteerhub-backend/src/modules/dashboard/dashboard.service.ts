@@ -18,7 +18,6 @@ export function median(values: number[]): number | null {
 
 const ratio = (part: number, whole: number) => (whole === 0 ? null : round1((part / whole) * 100));
 
-/** Ever published (approved at least once), which includes items under re-moderation. */
 const PUBLISHED_REQUEST: Prisma.HelpRequestWhereInput = { publishedAt: { not: null } };
 const PUBLISHED_TASK: Prisma.VolunteerTaskWhereInput = { publishedAt: { not: null } };
 
@@ -28,11 +27,6 @@ function countBy<K extends string>(rows: { key: K; count: number }[], keys: read
   ) as Record<K, number>;
 }
 
-/**
- * Admin dashboard, computed from VolunteerHub's own records. Success metrics of the
- * specification: handled requests rate, filled tasks rate and average time to match
- * (request publication → accepted offer).
- */
 export async function getAdminDashboard(prisma: Db) {
   const now = new Date();
   const [
@@ -150,7 +144,6 @@ export async function getAdminDashboard(prisma: Db) {
       published: publishedRequests,
       byStatus: requestsByStatus,
       pendingOffers,
-      /** Completed ÷ published requests that were not cancelled, in percent. */
       handledRatePercent: ratio(
         requestsByStatus.COMPLETED,
         publishedRequests - requestsByStatus.CANCELLED,
@@ -170,7 +163,6 @@ export async function getAdminDashboard(prisma: Db) {
     tasks: {
       published: publishedTasks.length,
       byStatus: tasksByStatus,
-      /** Published, non-cancelled tasks whose places are all taken, in percent. */
       filledRatePercent: ratio(
         nonCancelledTasks.filter((task) => fullSet.has(task.id)).length,
         nonCancelledTasks.length,
@@ -195,7 +187,6 @@ export async function getAdminDashboard(prisma: Db) {
   };
 }
 
-/** Personal dashboard ("my area"): my requests, offers, tasks and upcoming registrations. */
 export async function getMyDashboard(prisma: Db, userId: string) {
   const now = new Date();
   const [requests, offers, tasks, upcoming, unread] = await Promise.all([

@@ -24,7 +24,6 @@ export const offerSelect = {
       name: true,
       email: true,
       phone: true,
-      // Skills and region help the owner choose. Availability is private and never selected.
       volunteerProfile: { select: { skills: true, region: true } },
     },
   },
@@ -32,7 +31,6 @@ export const offerSelect = {
 
 type OfferRow = Prisma.HelpOfferGetPayload<{ select: typeof offerSelect }>;
 
-/** Contact details of the volunteer appear only on an accepted offer, for the owner and admins. */
 export function serializeOffer(offer: OfferRow, options: { showContact: boolean }) {
   const { volunteer } = offer;
   return {
@@ -56,10 +54,6 @@ export function serializeOffer(offer: OfferRow, options: { showContact: boolean 
   };
 }
 
-/**
- * Any user except the owner can offer help on an approved, open request: one active
- * (pending or accepted) offer per volunteer, also enforced by a partial unique index.
- */
 export async function createOffer(
   prisma: Db,
   requestId: string,
@@ -109,7 +103,6 @@ export async function createOffer(
 const alreadyOffered = () =>
   new AppError(409, ErrorCodes.ALREADY_EXISTS, 'You already have an active offer on this request.');
 
-/** Loads an offer the user is involved in (volunteer, request owner or admin); 404 otherwise. */
 async function loadOffer(db: DbClient, id: string, user: AuthUser) {
   const offer = await db.helpOffer.findUnique({
     where: { id },
@@ -124,12 +117,6 @@ async function loadOffer(db: DbClient, id: string, user: AuthUser) {
   return { offer, request, access, isVolunteer };
 }
 
-/**
- * The request owner accepts exactly one offer. Under a row lock on the request: the offer
- * becomes ACCEPTED, every other pending offer is DECLINED and the request moves to
- * IN_PROGRESS. A partial unique index guarantees one accepted offer even if this were
- * bypassed. Acceptance is separate from publication: the request must be approved.
- */
 export async function acceptOffer(prisma: Db, offerId: string, user: AuthUser) {
   const requestId = await offerRequestId(prisma, offerId);
   return prisma.$transaction(async (tx) => {
@@ -214,7 +201,6 @@ export async function declineOffer(prisma: Db, offerId: string, user: AuthUser) 
   });
 }
 
-/** The volunteer withdraws their own pending offer. Accepted offers cannot be withdrawn. */
 export async function withdrawOffer(prisma: Db, offerId: string, user: AuthUser) {
   const requestId = await offerRequestId(prisma, offerId);
   await prisma.$transaction(async (tx) => {

@@ -12,10 +12,6 @@ import {
   type TestUser,
 } from './helpers/setup.js';
 
-/**
- * A sweep over every read endpoint an anonymous visitor or an unrelated user can call, after
- * building a realistic data set. None of the private values may appear anywhere.
- */
 const app = buildApp();
 
 const SECRETS = {
@@ -111,7 +107,6 @@ describe('privacy sweep', () => {
         assertClean(res.body, `${viewer ? 'stranger' : 'anonymous'} GET ${path}`);
       }
     }
-    // A stranger's own views and protected lists reveal nothing either.
     for (const path of [
       `/api/requests/${requestId}/offers`,
       '/api/users/me/matches',

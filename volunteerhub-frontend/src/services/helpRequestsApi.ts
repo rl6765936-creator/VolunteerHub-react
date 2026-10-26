@@ -9,9 +9,7 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/** Public list: approved requests in the chosen status, 20 per page. */
 const getHelpRequests = async (status: string, page: number): Promise<HelpRequestsResponse> => {
-  // Unlike VoiceUp there is no "all" option: the server lists one status at a time (default OPEN).
   const params = new URLSearchParams({ status, page: String(page), pageSize: "20" });
 
   const response = await fetch(`${API_URL}/requests?${params}`);
@@ -23,7 +21,6 @@ const getHelpRequests = async (status: string, page: number): Promise<HelpReques
   return response.json();
 };
 
-/** My requests, in every moderation state. */
 const getMyHelpRequests = async (token: string): Promise<HelpRequestsResponse> => {
   const response = await fetch(`${API_URL}/users/me/requests`, {
     headers: {
@@ -38,7 +35,6 @@ const getMyHelpRequests = async (token: string): Promise<HelpRequestsResponse> =
   return response.json();
 };
 
-/** Detail view. With the owner's token it includes privateDetails (the address). */
 const getHelpRequest = async (
   requestId: string,
   token?: string
@@ -108,7 +104,6 @@ const getHelpRequestImages = async (
   return response.json();
 };
 
-/** The attachment url is relative to the API origin (/api/attachments/:id/file). */
 const getHelpRequestImageFile = async (url: string, token?: string): Promise<Blob> => {
   const apiOrigin = new URL(API_URL).origin;
   const imageUrl = new URL(url, apiOrigin);
@@ -145,7 +140,6 @@ const updateHelpRequest = async (
   return response.json();
 };
 
-/** Owner only, after an offer was accepted (status IN_PROGRESS). */
 const completeHelpRequest = async (
   requestId: string,
   token: string

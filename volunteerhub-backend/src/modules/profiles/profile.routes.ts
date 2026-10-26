@@ -21,7 +21,6 @@ export const volunteerProfileBody = z
   })
   .strict();
 
-/** The full profile, including the private availability. Only for the user and admins. */
 export const ownProfileSelect = {
   bio: true,
   skills: true,
@@ -32,15 +31,10 @@ export const ownProfileSelect = {
   updatedAt: true,
 } as const;
 
-/**
- * Mounted under /api/users/me/volunteer-profile. Availability is private: no other user's
- * view (offers, registrations, public lists) ever includes it.
- */
 export function createVolunteerProfileRouter({ prisma }: AppDependencies): Router {
   const router = Router();
   router.use(requireAuth);
 
-  /** Returns the profile, or `null` when the user has not filled it in yet. */
   router.get('/', async (req, res) => {
     const profile = await prisma.volunteerProfile.findUnique({
       where: { userId: currentUser(req).id },
@@ -49,7 +43,6 @@ export function createVolunteerProfileRouter({ prisma }: AppDependencies): Route
     res.json({ data: profile });
   });
 
-  /** Creates or fully replaces the profile. */
   router.put('/', async (req, res) => {
     const body = volunteerProfileBody.parse(req.body);
     const userId = currentUser(req).id;

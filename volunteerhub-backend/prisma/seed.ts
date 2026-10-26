@@ -1,9 +1,3 @@
-/**
- * Idempotent seed: the first admin account and the volunteering categories.
- * Run with `npm run db:seed` (or automatically by `prisma migrate reset`).
- * The admin password comes from SEED_ADMIN_PASSWORD and is never printed.
- * Existing data is never deleted; running it again only fills in what is missing.
- */
 import { z } from 'zod';
 import { hashPassword } from '../src/lib/password.js';
 import { createPrisma } from '../src/lib/prisma.js';
@@ -45,7 +39,6 @@ async function main(): Promise<void> {
     select: { id: true },
   });
   if (existing) {
-    // Never overwrite an existing password; only make sure the account is an active admin.
     await prisma.user.update({
       where: { id: existing.id },
       data: { role: 'ADMIN', status: 'ACTIVE' },

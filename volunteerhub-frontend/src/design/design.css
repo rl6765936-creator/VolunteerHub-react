@@ -1,7 +1,3 @@
-/* VolunteerHub design: "a ladder to the heart".
-   Turquoise sky, cotton-candy clouds, a beating red heart, bubbles, sparkles and hearts.
-   Every class is prefixed with vh- so it never collides with anything else. */
-
 @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Varela+Round&display=swap");
 
 :root {
@@ -26,8 +22,6 @@
   --vh-body: "Varela Round", "Rubik", system-ui, sans-serif;
   color-scheme: light;
 }
-
-/* ---------- page basics ---------- */
 
 html {
   background: #a6e1e9;
@@ -66,8 +60,6 @@ a:hover { color: var(--vh-heart-dark); }
   outline: 3px solid rgba(217, 46, 79, 0.55);
   outline-offset: 3px;
 }
-
-/* ---------- shell, header, navigation ---------- */
 
 .vh-shell {
   position: relative;
@@ -139,8 +131,6 @@ a:hover { color: var(--vh-heart-dark); }
   font-size: 15px;
 }
 
-/* ---------- buttons ---------- */
-
 .vh-btn {
   display: inline-flex;
   align-items: center;
@@ -169,11 +159,8 @@ a:hover { color: var(--vh-heart-dark); }
 .vh-btn--plain:hover { color: var(--vh-ink); }
 .vh-btn--small { min-height: 44px; padding: 0 20px; font-size: 15px; }
 
-/* the small heart inside a button wiggles on hover */
 .vh-btn .vh-heart-icon { transition: transform 0.6s var(--vh-bounce); }
 .vh-btn:hover .vh-heart-icon { transform: scale(1.25) rotate(-8deg); }
-
-/* ---------- page headings and states ---------- */
 
 .vh-page-head {
   display: flex;
@@ -228,9 +215,6 @@ a:hover { color: var(--vh-heart-dark); }
   font-size: 16px;
 }
 
-/* ---------- cotton cards ---------- */
-
-/* help requests and my requests: 3 equal cards per row (2 on tablets, 1 on phones) */
 .vh-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -258,19 +242,16 @@ a:hover { color: var(--vh-heart-dark); }
   background: #fff;
   box-shadow: var(--vh-shadow);
   transition: transform 0.7s var(--vh-ease), box-shadow 0.7s;
-  /* "backwards", not "both": a kept end-state would override the hover lift */
   animation: vh-card-in 1s var(--vh-ease) backwards;
 }
 .vh-card:hover { transform: translateY(-8px) rotate(-0.4deg); box-shadow: var(--vh-shadow-hover); }
 
-/* staggered entrance */
 .vh-grid > :nth-child(2), .vh-list > :nth-child(2) { animation-delay: 0.08s; }
 .vh-grid > :nth-child(3), .vh-list > :nth-child(3) { animation-delay: 0.16s; }
 .vh-grid > :nth-child(4), .vh-list > :nth-child(4) { animation-delay: 0.24s; }
 .vh-grid > :nth-child(5), .vh-list > :nth-child(5) { animation-delay: 0.32s; }
 .vh-grid > :nth-child(n + 6), .vh-list > :nth-child(n + 6) { animation-delay: 0.4s; }
 
-/* a heart peeks out of the card corner on hover */
 .vh-card__peek {
   position: absolute;
   top: -18px;
@@ -324,8 +305,6 @@ a:hover { color: var(--vh-heart-dark); }
   color: #6e1f3d;
 }
 
-/* ---------- chips ---------- */
-
 .vh-chip {
   display: inline-flex;
   align-items: center;
@@ -343,8 +322,6 @@ a:hover { color: var(--vh-heart-dark); }
 .vh-chip--amber { background: #fff0d1; color: #7a4a0b; }
 .vh-chip--mint { background: #ddf5ea; color: #1c6247; }
 .vh-chip--heart { background: var(--vh-heart); color: #fff; }
-
-/* ---------- forms ---------- */
 
 .vh-form {
   display: flex;
@@ -408,7 +385,6 @@ select.vh-input { cursor: pointer; }
 
 .vh-two-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
 
-/* category bubbles */
 .vh-cats { display: flex; flex-wrap: wrap; gap: 10px; border: 0; margin: 0; padding: 0; min-width: 0; }
 .vh-cats legend { font-weight: 600; margin-bottom: 10px; padding: 0; }
 .vh-cat { position: relative; }
@@ -429,7 +405,6 @@ select.vh-input { cursor: pointer; }
 .vh-cat input:focus-visible + span { box-shadow: 0 0 0 4px rgba(227, 48, 76, 0.3); }
 .vh-cat input:disabled + span { opacity: 0.5; cursor: not-allowed; }
 
-/* cloud-shaped image drop zone */
 .vh-drop {
   display: flex;
   flex-direction: column;
@@ -456,7 +431,6 @@ select.vh-input { cursor: pointer; }
 }
 .vh-files { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* notice above the edit form */
 .vh-notice {
   display: flex;
   align-items: center;
@@ -479,8 +453,6 @@ select.vh-input { cursor: pointer; }
   color: var(--vh-heart-dark);
   animation: vh-pop-in 0.6s var(--vh-bounce);
 }
-
-/* ---------- ladders ---------- */
 
 .vh-ladder { display: flex; gap: 10px; }
 .vh-ladder__rails {
@@ -555,8 +527,6 @@ select.vh-input { cursor: pointer; }
 .vh-with-progress { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; }
 .vh-with-progress > .vh-form { flex: 1 1 560px; }
 
-/* ---------- admin ---------- */
-
 .vh-count-heart {
   position: relative;
   width: 110px;
@@ -570,8 +540,6 @@ select.vh-input { cursor: pointer; }
 .vh-count-heart span { position: relative; margin-top: -6px; color: #fff; font: 600 34px var(--vh-display); }
 
 .vh-reject-box { display: flex; flex-direction: column; gap: 8px; animation: vh-open-in 0.7s var(--vh-ease); }
-
-/* ---------- offers ---------- */
 
 .vh-offers {
   display: flex;
@@ -594,14 +562,10 @@ select.vh-input { cursor: pointer; }
 }
 .vh-offer-form { display: flex; flex-direction: column; gap: 10px; animation: vh-open-in 0.7s var(--vh-ease); }
 
-/* ---------- pagination and filter ---------- */
-
 .vh-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 28px; }
 .vh-toolbar .vh-input { width: auto; min-width: 200px; }
 .vh-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-top: 40px; }
 .vh-pager__text { padding: 8px 18px; border-radius: 999px; background: rgba(255, 255, 255, 0.85); }
-
-/* ---------- home ---------- */
 
 .vh-hero { display: flex; flex-wrap: wrap; align-items: center; gap: 40px; margin-bottom: 72px; }
 .vh-hero__text { flex: 1 1 460px; display: flex; flex-direction: column; gap: 22px; }
@@ -673,14 +637,11 @@ select.vh-input { cursor: pointer; }
   font: 600 26px var(--vh-display);
 }
 
-/* auth pages: form next to the photo */
 .vh-auth { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 48px; }
 .vh-auth__visual { flex: 1 1 320px; max-width: 420px; display: flex; justify-content: center; }
 .vh-auth .vh-form { flex: 1 1 420px; }
 
 .vh-footer { margin-top: 72px; text-align: center; color: var(--vh-ink-soft); font-size: 16px; }
-
-/* ---------- the living background ---------- */
 
 .vh-amb {
   position: fixed;
@@ -760,8 +721,6 @@ select.vh-input { cursor: pointer; }
   animation: vh-fall linear infinite;
 }
 
-/* ---------- hearts and stars from the mouse ---------- */
-
 .vh-cursor-layer {
   position: fixed;
   inset: 0;
@@ -780,8 +739,6 @@ select.vh-input { cursor: pointer; }
 }
 .vh-particle svg { display: block; width: 100%; height: 100%; }
 .vh-particle--star { filter: drop-shadow(0 0 4px rgba(255, 230, 150, 0.95)); }
-
-/* ---------- small decorative animations ---------- */
 
 .vh-beat { animation: vh-beat 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 
@@ -807,8 +764,6 @@ select.vh-input { cursor: pointer; }
   15% { transform: translate(calc(var(--dx) * 0.2), calc(var(--dy) * 0.2)) scale(1) rotate(calc(var(--rot) * 0.2)); opacity: 1; }
   100% { transform: translate(var(--dx), var(--dy)) scale(0.3) rotate(var(--rot)); opacity: 0; }
 }
-
-/* ---------- small screens and reduced motion ---------- */
 
 @media (max-width: 640px) {
   .vh-shell { padding: 16px 16px 60px; }

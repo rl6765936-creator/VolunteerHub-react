@@ -5,16 +5,10 @@ import helmet from 'helmet';
 import type { Env } from '../config/env.js';
 import { AppError, ErrorCodes } from '../lib/errors.js';
 
-/** Secure HTTP headers (CSP, nosniff, HSTS, no X-Powered-By, ...). */
 export function securityHeaders(): RequestHandler {
   return helmet();
 }
 
-/**
- * CORS allowlist from CORS_ORIGINS. With no origins configured, no CORS headers are sent,
- * so browsers block cross-origin access. Authentication uses the Authorization header,
- * so credentials (cookies) are intentionally not enabled.
- */
 export function corsPolicy(env: Env): RequestHandler {
   return cors({
     origin: env.CORS_ORIGINS.length > 0 ? env.CORS_ORIGINS : false,
@@ -43,22 +37,16 @@ function limiter(
   });
 }
 
-/**
- * Global per-IP rate limit for the API (in-memory store, suitable for a single instance).
- * The health checks are exempt so uptime monitors never get throttled.
- */
 export function globalRateLimiter(env: Env): RequestHandler {
   return limiter(env.RATE_LIMIT_WINDOW_MS, env.RATE_LIMIT_MAX, (path) =>
     path.startsWith('/health'),
   );
 }
 
-/** Stricter limit for register and login, against credential stuffing and brute force. */
 export function authRateLimiter(env: Env): RequestHandler {
   return limiter(env.RATE_LIMIT_WINDOW_MS, env.AUTH_RATE_LIMIT_MAX);
 }
 
-/** Hourly limit for writes that create content: requests, offers, tasks and uploads. */
 export function writeRateLimiter(env: Env): RequestHandler {
   return limiter(60 * 60 * 1000, env.WRITE_RATE_LIMIT_MAX);
 }

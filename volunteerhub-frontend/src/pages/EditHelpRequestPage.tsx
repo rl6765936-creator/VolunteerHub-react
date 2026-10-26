@@ -30,7 +30,6 @@ const EditHelpRequestPage = () => {
     formState: { errors },
   } = useForm<EditHelpRequestForm>();
 
-  // Design only: compare what is typed with the saved request to show "changed" tags.
   const [title, description, region, addressDetails] = useWatch({
     control,
     name: ["title", "description", "region", "addressDetails"],

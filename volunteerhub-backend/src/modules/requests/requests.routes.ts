@@ -38,11 +38,9 @@ async function detail(prisma: Db, id: string, req: Request) {
   return serializeRequestDetail(request, access);
 }
 
-/** /api/requests: public search of approved requests, and owner actions. */
 export function createRequestsRouter({ env, prisma }: AppDependencies): Router {
   const router = Router();
 
-  /** Only approved requests are listed publicly (default: open ones). */
   router.get('/', async (req, res) => {
     const query = listRequestsQuery.parse(req.query);
     const where: Prisma.HelpRequestWhereInput = {
@@ -102,7 +100,6 @@ export function createRequestsRouter({ env, prisma }: AppDependencies): Router {
     res.json({ data: await detail(prisma, id, req) });
   });
 
-  /** Moderation and status history: owner and admins only. */
   router.get('/:id/history', requireAuth, async (req, res) => {
     const id = parseId(req.params.id);
     const { access } = await loadVisibleRequest(prisma, id, req.user);
@@ -125,7 +122,6 @@ export function createRequestsRouter({ env, prisma }: AppDependencies): Router {
   return router;
 }
 
-/** /api/users/me/requests: everything I asked for, in any moderation state. */
 export function createMyRequestsRouter({ prisma }: AppDependencies): Router {
   const router = Router();
   router.use(requireAuth);
@@ -155,7 +151,6 @@ export function createMyRequestsRouter({ prisma }: AppDependencies): Router {
   return router;
 }
 
-/** /api/admin/requests: the moderation queue and decisions. */
 export function createRequestsAdminRouter({ prisma }: AppDependencies): Router {
   const router = Router();
 

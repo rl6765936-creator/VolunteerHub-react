@@ -14,17 +14,9 @@ export type TaskDetail = Prisma.VolunteerTaskGetPayload<{ include: typeof taskDe
 export interface TaskAccess {
   isOwner: boolean;
   isAdmin: boolean;
-  /** The viewer's current or most recent registration for this task. */
   myRegistration: { id: string; status: string; createdAt: Date; cancelledAt: Date | null } | null;
 }
 
-/**
- * Who may see a task:
- * - everyone, once an admin approved it (and while it stays approved);
- * - otherwise only the creator, admins and users who registered for it (participants),
- *   e.g. while a material edit is being re-moderated.
- * Anyone else gets 404.
- */
 export async function loadVisibleTask(
   db: DbClient,
   id: string,
@@ -36,7 +28,6 @@ export async function loadVisibleTask(
     ? await db.taskRegistration.findFirst({
         where: { taskId: id, userId: user.id },
         select: { id: true, status: true, createdAt: true, cancelledAt: true },
-        // A confirmed registration wins over older cancelled ones.
         orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       })
     : null;
@@ -56,7 +47,6 @@ export async function loadVisibleTask(
 
 export const confirmedCount = (task: TaskDetail) => task._count.registrations;
 
-/** Registration is automatic while the task is approved, open, upcoming and not full. */
 export function isRegistrationOpen(
   task: Pick<TaskDetail, 'moderationStatus' | 'status' | 'startsAt' | 'capacity'>,
   confirmed: number,

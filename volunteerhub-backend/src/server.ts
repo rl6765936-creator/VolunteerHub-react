@@ -30,7 +30,6 @@ server.on('error', (error) => {
 
 function shutdown(signal: string): void {
   logger.info('Shutting down', { signal });
-  // Force exit if open connections do not drain in time.
   setTimeout(() => process.exit(1), SHUTDOWN_TIMEOUT_MS).unref();
   server.close((error) => {
     prisma

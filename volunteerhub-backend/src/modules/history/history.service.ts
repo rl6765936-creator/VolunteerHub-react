@@ -12,12 +12,10 @@ export interface StatusChange {
   note?: string | null;
 }
 
-/** Appends one row to the status history. Call it inside the transaction of the change. */
 export async function recordStatusChange(db: DbClient, change: StatusChange): Promise<void> {
   await db.statusHistory.create({ data: { ...change, note: change.note ?? null } });
 }
 
-/** The full history of one entity, oldest first, with the actor's display name. */
 export function listHistory(db: DbClient, entityType: HistoryEntityType, entityIds: string[]) {
   return db.statusHistory.findMany({
     where: { entityType, entityId: { in: entityIds } },

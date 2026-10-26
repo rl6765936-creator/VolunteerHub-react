@@ -35,7 +35,6 @@ export function textSearch(q: string | undefined): Prisma.HelpRequestWhereInput 
   };
 }
 
-/** New requests always start as PENDING_REVIEW: nothing is public before an admin approves it. */
 export async function createRequest(prisma: Db, input: CreateInput, user: AuthUser) {
   await assertActiveCategory(prisma, input.categoryId);
   return prisma.$transaction(async (tx) => {
@@ -59,12 +58,6 @@ export async function createRequest(prisma: Db, input: CreateInput, user: AuthUs
 const sameDate = (a: Date | null, b: Date | null) =>
   (a?.getTime() ?? null) === (b?.getTime() ?? null);
 
-/**
- * Owners edit their request only while it is OPEN. Every field is material content, so an
- * approved request goes back to PENDING_REVIEW (hidden publicly, still visible to the owner,
- * admins and users who made offers) and a rejected one is resubmitted. Users with an active
- * offer are notified of the change.
- */
 export async function updateRequest(prisma: Db, id: string, input: UpdateInput, user: AuthUser) {
   return prisma.$transaction(async (tx) => {
     if (!(await lockHelpRequest(tx, id))) throw errors.notFound('Help request');
@@ -138,10 +131,6 @@ export async function updateRequest(prisma: Db, id: string, input: UpdateInput, 
   });
 }
 
-/**
- * The owner or an admin cancels an open or in-progress request. Pending offers are declined,
- * everyone with an active offer is notified, and an admin cancellation is audit-logged.
- */
 export async function cancelRequest(
   prisma: Db,
   id: string,
@@ -199,7 +188,6 @@ export async function cancelRequest(
   });
 }
 
-/** Declines pending offers (when another offer is accepted or the request is cancelled). */
 export async function declineOffers(
   tx: DbClient,
   offers: { id: string }[],
@@ -225,7 +213,6 @@ export async function declineOffers(
   }
 }
 
-/** The owner marks an in-progress request (an offer was accepted) as completed. */
 export async function completeRequest(prisma: Db, id: string, user: AuthUser) {
   await prisma.$transaction(async (tx) => {
     if (!(await lockHelpRequest(tx, id))) throw errors.notFound('Help request');
@@ -259,7 +246,6 @@ export async function completeRequest(prisma: Db, id: string, user: AuthUser) {
   });
 }
 
-/** PENDING_REVIEW → APPROVED. The first approval sets publishedAt; it is kept on re-approval. */
 export async function approveRequest(
   prisma: Db,
   id: string,
@@ -314,7 +300,6 @@ export async function approveRequest(
   });
 }
 
-/** PENDING_REVIEW or APPROVED (takedown) → REJECTED, with a reason shown to the owner. */
 export async function rejectRequest(
   prisma: Db,
   id: string,

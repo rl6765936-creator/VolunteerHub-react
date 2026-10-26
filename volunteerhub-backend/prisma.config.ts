@@ -1,14 +1,10 @@
+import { existsSync } from 'node:fs';
 import { defineConfig } from 'prisma/config';
 
-// Prisma 7 does not read .env by itself. Load it (if present) so CLI commands such as
-// `prisma migrate deploy` see DATABASE_URL. Variables already set in the shell win.
-try {
+if (existsSync('.env')) {
   process.loadEnvFile('.env');
-} catch {
-  // No .env file: rely on the real environment (CI, production).
 }
 
-// Prisma CLI configuration (migrations, seed). The app itself reads DATABASE_URL from env.ts.
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {

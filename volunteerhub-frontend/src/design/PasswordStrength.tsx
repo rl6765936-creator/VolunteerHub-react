@@ -2,10 +2,6 @@ import StepLadder from "./StepLadder";
 
 const LABELS = ["עוד לא התחלנו לטפס", "שליבה ראשונה", "באמצע הדרך", "כמעט למעלה", "הגעתם ללב"];
 
-/**
- * A visual hint only: the real rules (8–128 characters) stay in the form validation.
- * More length, digits and symbols light more rungs.
- */
 const PasswordStrength = ({ password }: { password: string }) => {
   const checks = [
     password.length >= 8,

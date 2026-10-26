@@ -31,7 +31,6 @@ const get = (id: string, user?: TestUser) => {
   return user ? req.set(user.auth) : req;
 };
 
-/** An offer inserted directly, to make `user` a participant without the offers API. */
 const offerFrom = (requestId: string, user: TestUser) =>
   testPrisma().helpOffer.create({
     data: { requestId, volunteerId: user.id, message: 'I can help on Sunday.' },
@@ -234,7 +233,6 @@ describe('editing', () => {
       region: 'Tel Aviv',
     });
 
-    // Hidden publicly, still visible to the owner, admins and the user who offered help.
     expect((await get(id)).status).toBe(404);
     expect((await request(app).get('/api/requests')).body.data).toHaveLength(0);
     const stranger = await createUser();
@@ -255,7 +253,6 @@ describe('editing', () => {
       'PENDING_REVIEW',
     ]);
 
-    // Re-approval keeps the original publication date.
     const published = (await testPrisma().helpRequest.findUniqueOrThrow({ where: { id } }))
       .publishedAt;
     await request(app).post(`/api/admin/requests/${id}/approve`).set(admin.auth).send({});

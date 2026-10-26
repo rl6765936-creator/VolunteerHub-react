@@ -1,13 +1,11 @@
 import StepLadder from "./StepLadder";
 
 type FormProgressProps = {
-  /** One entry per required field: is it filled in well enough? */
   checks: boolean[];
 };
 
 const LABELS = ["בואו נתחיל לטפס", "שליבה ראשונה", "חצי הדרך", "עוד שליבה אחת", "מוכן לשליחה"];
 
-/** The ladder next to a form: a rung per required field, and a heart that lights up at the top. */
 const FormProgress = ({ checks }: FormProgressProps) => {
   const done = checks.filter(Boolean).length;
   const ready = done === checks.length;

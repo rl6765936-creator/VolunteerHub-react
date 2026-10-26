@@ -1,7 +1,3 @@
-// VolunteerHub data model. 11 entities, as approved in the revised plan.
-// Two roles only (USER, ADMIN); ownership decides who may manage a request or a task.
-// Publication moderation and lifecycle (execution) status are separate fields.
-
 generator client {
   provider            = "prisma-client"
   output              = "../src/generated/prisma"
@@ -14,10 +10,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ---------------------------------------------------------------------------
-// Enums
-// ---------------------------------------------------------------------------
-
 enum UserRole {
   USER
   ADMIN
@@ -28,7 +20,6 @@ enum UserStatus {
   BLOCKED
 }
 
-/// Publication moderation, shared by help requests and volunteer tasks.
 enum ModerationStatus {
   PENDING_REVIEW
   APPROVED
@@ -55,7 +46,6 @@ enum TaskStatus {
   CANCELLED
 }
 
-/// Registration is automatic, so there is no pending state.
 enum RegistrationStatus {
   CONFIRMED
   CANCELLED
@@ -78,7 +68,6 @@ enum HistoryEntityType {
   TASK_REGISTRATION
 }
 
-/// Which status field changed: publication moderation or lifecycle status.
 enum HistoryField {
   MODERATION
   STATUS
@@ -103,10 +92,6 @@ enum NotificationType {
   REGISTRATION_CANCELLED
 }
 
-// ---------------------------------------------------------------------------
-// Users and profiles
-// ---------------------------------------------------------------------------
-
 model User {
   id           String     @id @default(uuid()) @db.Uuid
   name         String     @db.VarChar(80)
@@ -114,7 +99,6 @@ model User {
   passwordHash String
   role         UserRole   @default(USER)
   status       UserStatus @default(ACTIVE)
-  /// Contact phone. Shown only to an accepted counterpart and to admins.
   phone        String?    @db.VarChar(30)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -135,7 +119,6 @@ model User {
   @@index([status])
 }
 
-/// Volunteer details. Availability is private: only the user and admins can read it.
 model VolunteerProfile {
   userId            String    @id @db.Uuid
   bio               String?   @db.VarChar(1000)
@@ -165,26 +148,19 @@ model Category {
   interestedUsers VolunteerProfile[]
 }
 
-// ---------------------------------------------------------------------------
-// Help requests and offers
-// ---------------------------------------------------------------------------
-
 model HelpRequest {
   id               String            @id @default(uuid()) @db.Uuid
   ownerId          String            @db.Uuid
   categoryId       String            @db.Uuid
   title            String            @db.VarChar(120)
   description      String            @db.VarChar(4000)
-  /// Public, general area (city or neighbourhood).
   region           String            @db.VarChar(80)
-  /// Exact address or meeting point. Private until an offer is accepted.
   addressDetails   String?           @db.VarChar(300)
   neededBy         DateTime?
   moderationStatus ModerationStatus  @default(PENDING_REVIEW)
   rejectionReason  String?           @db.VarChar(500)
   reviewedById     String?           @db.Uuid
   reviewedAt       DateTime?
-  /// First publication. Set once; a pending request with this set is under re-moderation.
   publishedAt      DateTime?
   status           HelpRequestStatus @default(OPEN)
   completedAt      DateTime?
@@ -218,15 +194,9 @@ model HelpOffer {
   request   HelpRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   volunteer User        @relation(fields: [volunteerId], references: [id], onDelete: Restrict)
 
-  // Partial unique indexes (one accepted offer per request, one active offer per volunteer
-  // per request) are in the hand-written integrity migration.
   @@index([requestId, status])
   @@index([volunteerId])
 }
-
-// ---------------------------------------------------------------------------
-// Volunteer tasks and registrations
-// ---------------------------------------------------------------------------
 
 model VolunteerTask {
   id                 String           @id @default(uuid()) @db.Uuid
@@ -243,7 +213,6 @@ model VolunteerTask {
   rejectionReason    String?          @db.VarChar(500)
   reviewedById       String?          @db.Uuid
   reviewedAt         DateTime?
-  /// First publication. Set once; a pending task with this set is under re-moderation.
   publishedAt        DateTime?
   status             TaskStatus       @default(OPEN)
   cancelledAt        DateTime?
@@ -263,8 +232,6 @@ model VolunteerTask {
   @@index([region])
 }
 
-/// One row per registration. Cancelling keeps the row, so the history is preserved and a
-/// user can register again later (a new row). At most one CONFIRMED row per user and task.
 model TaskRegistration {
   id          String             @id @default(uuid()) @db.Uuid
   taskId      String             @db.Uuid
@@ -280,11 +247,6 @@ model TaskRegistration {
   @@index([userId, status])
 }
 
-// ---------------------------------------------------------------------------
-// History, media, notifications, audit
-// ---------------------------------------------------------------------------
-
-/// Append-only log of moderation and lifecycle status changes.
 model StatusHistory {
   id         String            @id @default(uuid()) @db.Uuid
   entityType HistoryEntityType
@@ -301,14 +263,12 @@ model StatusHistory {
   @@index([entityType, entityId, createdAt])
 }
 
-/// Images attached to help requests.
 model MediaAttachment {
   id         String   @id @default(uuid()) @db.Uuid
   requestId  String   @db.Uuid
   uploaderId String   @db.Uuid
   mimeType   String   @db.VarChar(50)
   sizeBytes  Int
-  /// The image itself (stored in the database, so it survives redeploys of the server).
   data       Bytes
   createdAt  DateTime @default(now())
 
@@ -322,7 +282,6 @@ model Notification {
   id         String           @id @default(uuid()) @db.Uuid
   userId     String           @db.Uuid
   type       NotificationType
-  /// "HelpRequest" or "VolunteerTask": what the notification links to.
   entityType String           @db.VarChar(40)
   entityId   String           @db.Uuid
   message    String           @db.VarChar(300)

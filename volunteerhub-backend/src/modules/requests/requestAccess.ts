@@ -19,19 +19,10 @@ export type RequestDetail = Prisma.HelpRequestGetPayload<{ include: typeof reque
 export interface RequestAccess {
   isOwner: boolean;
   isAdmin: boolean;
-  /** The viewer's most recent offer on this request, in any status. */
   myOffer: { id: string; status: string } | null;
-  /** The viewer's offer was accepted: they may see the requester's contact details. */
   isAcceptedVolunteer: boolean;
 }
 
-/**
- * Who may see a help request:
- * - everyone, once an admin approved it (and while it stays approved);
- * - otherwise only the owner, admins and "participants" (users who made an offer on it),
- *   e.g. while a material edit is being re-moderated.
- * Anyone else gets 404, so hidden requests do not leak their existence.
- */
 export async function loadVisibleRequest(
   db: DbClient,
   id: string,
@@ -61,7 +52,6 @@ export async function loadVisibleRequest(
   return { request, access };
 }
 
-/** Owner-only actions: 403 for viewers who can see the request, 404 for everyone else. */
 export async function loadOwnRequest(db: DbClient, id: string, user: AuthUser) {
   const { request, access } = await loadVisibleRequest(db, id, user);
   if (!access.isOwner) throw errors.forbidden('Only the owner of this request can do that.');

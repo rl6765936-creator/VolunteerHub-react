@@ -2,7 +2,6 @@ import type { HelpRequestDetailResponse, HelpRequestsResponse } from "../types/h
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/** The moderation queue. Unlike VoiceUp, the server has no default filter, so it is sent explicitly. */
 const getPendingHelpRequests = async (token: string): Promise<HelpRequestsResponse> => {
   const response = await fetch(`${API_URL}/admin/requests?moderationStatus=PENDING_REVIEW`, {
     headers: {
