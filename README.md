@@ -1,43 +1,41 @@
 # VolunteerHub
 
-מערכת להתנדבות קהילתית: משתמשים מפרסמים בקשות עזרה, מנהל מאשר או דוחה אותן, ומתנדבים מציעים עזרה. בעל הבקשה בוחר מתנדב אחד ומסמן את הבקשה כהושלמה.
+A community volunteering platform. Users post help requests, an admin approves or rejects them, and volunteers offer help. The request owner accepts one volunteer and marks the request as completed.
 
-A community volunteering app: users post help requests, an admin moderates them, volunteers offer help, and the request owner accepts one offer and completes the request.
+## Repository structure
 
-## מבנה הריפוזיטורי
-
-| תיקייה | תוכן |
+| Folder | Contents |
 | --- | --- |
-| [`volunteerhub-backend/`](volunteerhub-backend) | שרת: Node.js 22, Express 5, TypeScript, Prisma, PostgreSQL, JWT, Zod, Vitest |
-| [`volunteerhub-frontend/`](volunteerhub-frontend) | לקוח: React 19, TypeScript, Vite, React Router, React Hook Form + Yup, TanStack React Query, Context API |
+| [`volunteerhub-backend/`](volunteerhub-backend) | Server: Node.js 22, Express 5, TypeScript, Prisma, PostgreSQL, JWT, Zod, Vitest |
+| [`volunteerhub-frontend/`](volunteerhub-frontend) | Client: React 19, TypeScript, Vite, React Router, React Hook Form + Yup, TanStack React Query, Context API |
 
-## מה יש במערכת
+## Features
 
-- הרשמה והתחברות עם JWT, ושני תפקידים: משתמש רגיל ומנהל (`ADMIN`), עם הרשאות שונות.
-- אובייקט מרכזי: בקשת עזרה. השדות שלה הם כותרת, תיאור, קטגוריה, אזור, כתובת, תאריך יעד ותמונות. יש לה סטטוס (`OPEN`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`) וגם סטטוס אישור (`PENDING_REVIEW`, `APPROVED`, `REJECTED`).
-- רשימת בקשות עם סינון לפי סטטוס ועם עימוד. אפשר להוסיף בקשה ולערוך אותה.
-- "הבקשות שלי", הצעות עזרה ובחירת מתנדב.
-- מסך מנהל לאישור ולדחייה של בקשות, עם סיבת דחייה.
-- כל הנתונים מגיעים מהשרת ונשמרים במסד PostgreSQL.
+- Registration and login with JWT, and two roles with different permissions: regular user and admin (`ADMIN`).
+- The main object is a help request. Its fields are title, description, category, region, address, due date and images. Each request has a status (`OPEN`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`) and a moderation status (`PENDING_REVIEW`, `APPROVED`, `REJECTED`).
+- A list of requests with a status filter and pagination. Users can create requests and edit them.
+- "My requests", help offers, and choosing a volunteer.
+- An admin screen for approving and rejecting requests, with a rejection reason.
+- All data comes from the server and is stored in a PostgreSQL database.
 
-## הרצה מקומית
+## Running locally
 
-דרישות: Node.js 22 ו-PostgreSQL.
+Requirements: Node.js 22 and PostgreSQL.
 
-### שרת
+### Server
 
 ```bash
 cd volunteerhub-backend
-cp .env.example .env      # ממלאים ערכים אמיתיים, הקובץ לא נשמר בגיט
+cp .env.example .env      # fill in real values; this file is not committed
 npm install
-npm run db:deploy         # מריץ את המיגרציות
-npm run db:seed           # יוצר את קטגוריות ברירת המחדל ואת חשבון המנהל הראשון
+npm run db:deploy         # apply the database migrations
+npm run db:seed           # create the default categories and the first admin account
 npm run dev               # http://localhost:3001/api
 ```
 
-תיעוד ה-API (Swagger) נמצא בכתובת `http://localhost:3001/api/docs`. פרטים נוספים יש ב-[README של השרת](volunteerhub-backend/README.md).
+The API documentation (Swagger) is at `http://localhost:3001/api/docs`. See the [backend README](volunteerhub-backend/README.md) for more details.
 
-### לקוח
+### Client
 
 ```bash
 cd volunteerhub-frontend
@@ -46,19 +44,19 @@ npm install
 npm run dev               # http://localhost:5173
 ```
 
-## פריסה לענן (Render)
+## Deploying to the cloud (Render)
 
-1. **מסד נתונים:** יוצרים PostgreSQL ב-Render ומעתיקים את ה-Internal Database URL.
-2. **שרת:** יוצרים Web Service עם Root Directory `volunteerhub-backend`.
+1. **Database:** create a PostgreSQL instance on Render and copy its Internal Database URL.
+2. **Server:** create a Web Service with Root Directory `volunteerhub-backend`.
    - Build: `npm install && npm run build && npm run db:deploy`
    - Start: `npm start`
-   - משתני סביבה: `NODE_ENV=production`, `DATABASE_URL`, `JWT_SECRET` (לפחות 32 תווים), `CORS_ORIGINS` (כתובת הלקוח), `TRUST_PROXY=1`
-3. **לקוח:** יוצרים Static Site עם Root Directory `volunteerhub-frontend`.
+   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `JWT_SECRET` (at least 32 characters), `CORS_ORIGINS` (the client URL), `TRUST_PROXY=1`
+3. **Client:** create a Static Site with Root Directory `volunteerhub-frontend`.
    - Build: `npm install && npm run build`
    - Publish directory: `dist`
-   - משתנה סביבה: `VITE_API_URL=https://<כתובת-השרת>/api`
-   - Rewrite rule: `/*` אל `/index.html`, כדי שהניתוב של React Router יעבוד.
+   - Environment variable: `VITE_API_URL=https://<server-url>/api`
+   - Rewrite rule: `/*` to `/index.html`, so that React Router routes work.
 
-## אבטחה
+## Security
 
-קובצי `.env`, `node_modules`, קבצים שהועלו וגיבויי מסד נתונים לא נכנסים לריפוזיטורי (ראו את קובצי `.gitignore`). בקובץ `.env.example` יש רק ערכים לדוגמה.
+`.env` files, `node_modules`, uploaded files and database backups are not committed (see the `.gitignore` files). `.env.example` contains placeholder values only.
