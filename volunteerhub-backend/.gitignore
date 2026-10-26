@@ -6,3 +6,4 @@ coverage/
 uploads/
 src/generated/
 setup/*.txt
+setup/backup-*

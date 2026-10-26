@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import type { AppDependencies } from './deps.js';
-import type { LocalStorage } from './lib/storage.js';
 import { createAdminRouter } from './modules/admin/admin.routes.js';
 import { createAttachmentsRouter } from './modules/attachments/attachments.routes.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
@@ -18,7 +17,7 @@ import { createMyTasksRouter, createTasksRouter } from './modules/tasks/tasks.ro
 import { createUsersRouter } from './modules/users/users.routes.js';
 
 /** Root of the API, mounted at /api. Each feature module contributes its own router. */
-export function createApiRouter(deps: AppDependencies, storage: LocalStorage): Router {
+export function createApiRouter(deps: AppDependencies): Router {
   const router = Router();
 
   router.use('/health', createHealthRouter(deps));
@@ -30,7 +29,7 @@ export function createApiRouter(deps: AppDependencies, storage: LocalStorage): R
   router.use('/users', createUsersRouter(deps));
   router.use('/categories', createCategoriesRouter(deps));
   router.use('/requests', createRequestsRouter(deps));
-  router.use(createAttachmentsRouter(deps, storage));
+  router.use(createAttachmentsRouter(deps));
   router.use(createOffersRouter(deps));
   router.use('/tasks', createTasksRouter(deps));
   router.use('/notifications', createNotificationsRouter(deps));

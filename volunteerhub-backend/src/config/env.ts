@@ -47,8 +47,6 @@ const envSchema = z
     /** Per-IP limit for creating requests, offers and tasks and for uploads, per hour. */
     WRITE_RATE_LIMIT_MAX: positiveInt(30),
 
-    UPLOAD_DIR: z.string().min(1).default('uploads'),
-
     /** IANA time zone used to match task days with volunteers' available weekdays. */
     TIME_ZONE: z
       .string()

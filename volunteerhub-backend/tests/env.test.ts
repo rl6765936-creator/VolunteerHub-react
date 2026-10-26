@@ -61,12 +61,11 @@ describe('loadEnv', () => {
     }
   });
 
-  it('applies auth, write-limit and upload defaults', () => {
+  it('applies auth and write-limit defaults', () => {
     expect(loadEnv({ ...REQUIRED })).toMatchObject({
       JWT_EXPIRES_IN_SECONDS: 7200,
       AUTH_RATE_LIMIT_MAX: 20,
       WRITE_RATE_LIMIT_MAX: 30,
-      UPLOAD_DIR: 'uploads',
       TIME_ZONE: 'Asia/Jerusalem',
     });
   });

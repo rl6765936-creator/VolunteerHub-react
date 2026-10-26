@@ -1,11 +1,10 @@
-import { createReadStream } from 'node:fs';
 import { Router } from 'express';
 import multer from 'multer';
 import type { AppDependencies } from '../../deps.js';
 import { AppError, ErrorCodes, errors } from '../../lib/errors.js';
 import { parseId } from '../../lib/http.js';
 import { lockHelpRequest } from '../../lib/locks.js';
-import { detectImageType, type LocalStorage } from '../../lib/storage.js';
+import { detectImageType } from '../../lib/storage.js';
 import { currentUser, requireAuth } from '../../middleware/auth.js';
 import { writeRateLimiter } from '../../middleware/security.js';
 import { AuditActions, writeAudit } from '../audit/audit.service.js';
@@ -37,13 +36,12 @@ const withUrl = <T extends { id: string }>(attachment: T) => ({
 /**
  * Images for help requests: JPEG, PNG or WebP (detected from the file's bytes), up to 5 MB
  * each and 5 per request. The owner adds or removes images while the request is open; a new
- * image is material content, so an approved request goes back to moderation. Files are
- * served only through GET /api/attachments/:id/file, with the same visibility as the request.
+ * image is material content, so an approved request goes back to moderation. The image bytes
+ * are stored in the database (MediaAttachment.data) and served only through
+ * GET /api/attachments/:id/file, with the same visibility as the request. Lists never select
+ * the bytes.
  */
-export function createAttachmentsRouter(
-  { env, prisma }: AppDependencies,
-  storage: LocalStorage,
-): Router {
+export function createAttachmentsRouter({ env, prisma }: AppDependencies): Router {
   const router = Router();
 
   router.get('/requests/:id/attachments', async (req, res) => {
@@ -64,7 +62,7 @@ export function createAttachmentsRouter(
     async (req, res) => {
       const user = currentUser(req);
       const id = parseId(req.params.id);
-      // Cheap checks before touching the disk; they are repeated under the row lock below.
+      // Cheap checks first; they are repeated under the row lock below.
       const { access } = await loadVisibleRequest(prisma, id, user);
       if (!access.isOwner) throw errors.forbidden('Only the owner can add images.');
       const file = req.file;
@@ -78,80 +76,76 @@ export function createAttachmentsRouter(
         );
       }
 
-      const storageKey = await storage.save(file.buffer, type.extension);
-      try {
-        const result = await prisma.$transaction(async (tx) => {
-          if (!(await lockHelpRequest(tx, id))) throw errors.notFound('Help request');
-          const { request } = await loadVisibleRequest(tx, id, user);
-          if (request.status !== 'OPEN') {
-            throw errors.conflict(
-              ErrorCodes.INVALID_STATE,
-              'Images can only be added while the request is open.',
-            );
-          }
-          if (request._count.attachments >= MAX_ATTACHMENTS_PER_REQUEST) {
-            throw errors.conflict(
-              ErrorCodes.LIMIT_REACHED,
-              `A request can have at most ${MAX_ATTACHMENTS_PER_REQUEST} images.`,
-            );
-          }
-          const attachment = await tx.mediaAttachment.create({
-            data: {
-              requestId: id,
-              uploaderId: user.id,
-              storageKey,
-              mimeType: type.mimeType,
-              sizeBytes: file.size,
-            },
-            select: attachmentSelect,
-          });
-          const reModeration = request.moderationStatus !== 'PENDING_REVIEW';
-          if (reModeration) {
-            await tx.helpRequest.update({
-              where: { id },
-              data: {
-                moderationStatus: 'PENDING_REVIEW',
-                rejectionReason: null,
-                reviewedAt: null,
-                reviewedById: null,
-              },
-            });
-            await recordStatusChange(tx, {
-              entityType: 'HELP_REQUEST',
-              entityId: id,
-              field: 'MODERATION',
-              fromStatus: request.moderationStatus,
-              toStatus: 'PENDING_REVIEW',
-              actorId: user.id,
-              note: 'A new image was added; waiting for review.',
-            });
-            await notify(
-              tx,
-              request.offers.map((offer) => offer.volunteer.id),
-              {
-                type: 'REQUEST_UPDATED',
-                entityType: 'HelpRequest',
-                entityId: id,
-                message: `The help request ${quote(request.title)} you offered to help with was changed (images).`,
-              },
-              user.id,
-            );
-          }
-          return { attachment, reModeration };
+      const result = await prisma.$transaction(async (tx) => {
+        if (!(await lockHelpRequest(tx, id))) throw errors.notFound('Help request');
+        const { request } = await loadVisibleRequest(tx, id, user);
+        if (request.status !== 'OPEN') {
+          throw errors.conflict(
+            ErrorCodes.INVALID_STATE,
+            'Images can only be added while the request is open.',
+          );
+        }
+        if (request._count.attachments >= MAX_ATTACHMENTS_PER_REQUEST) {
+          throw errors.conflict(
+            ErrorCodes.LIMIT_REACHED,
+            `A request can have at most ${MAX_ATTACHMENTS_PER_REQUEST} images.`,
+          );
+        }
+        const attachment = await tx.mediaAttachment.create({
+          data: {
+            requestId: id,
+            uploaderId: user.id,
+            mimeType: type.mimeType,
+            sizeBytes: file.size,
+            // A copy as a plain Uint8Array, the type Prisma expects for Bytes.
+            data: new Uint8Array(file.buffer),
+          },
+          select: attachmentSelect,
         });
-        res
-          .status(201)
-          .json({ data: withUrl(result.attachment), meta: { reModeration: result.reModeration } });
-      } catch (error) {
-        await storage.remove(storageKey);
-        throw error;
-      }
+        const reModeration = request.moderationStatus !== 'PENDING_REVIEW';
+        if (reModeration) {
+          await tx.helpRequest.update({
+            where: { id },
+            data: {
+              moderationStatus: 'PENDING_REVIEW',
+              rejectionReason: null,
+              reviewedAt: null,
+              reviewedById: null,
+            },
+          });
+          await recordStatusChange(tx, {
+            entityType: 'HELP_REQUEST',
+            entityId: id,
+            field: 'MODERATION',
+            fromStatus: request.moderationStatus,
+            toStatus: 'PENDING_REVIEW',
+            actorId: user.id,
+            note: 'A new image was added; waiting for review.',
+          });
+          await notify(
+            tx,
+            request.offers.map((offer) => offer.volunteer.id),
+            {
+              type: 'REQUEST_UPDATED',
+              entityType: 'HelpRequest',
+              entityId: id,
+              message: `The help request ${quote(request.title)} you offered to help with was changed (images).`,
+            },
+            user.id,
+          );
+        }
+        return { attachment, reModeration };
+      });
+      res
+        .status(201)
+        .json({ data: withUrl(result.attachment), meta: { reModeration: result.reModeration } });
     },
   );
 
   router.get('/attachments/:id/file', async (req, res) => {
     const attachment = await prisma.mediaAttachment.findUnique({
       where: { id: parseId(req.params.id) },
+      select: { requestId: true, mimeType: true, data: true },
     });
     if (!attachment) throw errors.notFound('Attachment');
     try {
@@ -159,23 +153,22 @@ export function createAttachmentsRouter(
     } catch {
       throw errors.notFound('Attachment');
     }
+    const body = Buffer.from(attachment.data);
     res.setHeader('Content-Type', attachment.mimeType);
-    res.setHeader('Content-Length', attachment.sizeBytes);
+    res.setHeader('Content-Length', body.length);
     res.setHeader('Content-Disposition', 'inline');
     res.setHeader('Cache-Control', 'private, max-age=300');
-    const stream = createReadStream(storage.pathFor(attachment.storageKey));
-    stream.on('error', () => {
-      if (!res.headersSent) res.status(404).end();
-      else res.destroy();
-    });
-    stream.pipe(res);
+    res.end(body);
   });
 
   /** The owner removes images while the request is open; admins remove any (audit-logged). */
   router.delete('/attachments/:id', requireAuth, async (req, res) => {
     const user = currentUser(req);
     const id = parseId(req.params.id);
-    const attachment = await prisma.mediaAttachment.findUnique({ where: { id } });
+    const attachment = await prisma.mediaAttachment.findUnique({
+      where: { id },
+      select: { requestId: true, uploaderId: true },
+    });
     if (!attachment) throw errors.notFound('Attachment');
     const { request, access } = await loadVisibleRequest(prisma, attachment.requestId, user).catch(
       () => {
@@ -203,7 +196,6 @@ export function createAttachmentsRouter(
         });
       }
     });
-    await storage.remove(attachment.storageKey);
     res.status(204).end();
   });
 

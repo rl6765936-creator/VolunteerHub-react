@@ -102,7 +102,6 @@ values). See `.env.example` for the complete list.
 | `RATE_LIMIT_*`           | 300 req / 15 min          | Global per-IP limit (health is exempt)              |
 | `AUTH_RATE_LIMIT_MAX`    | `20`                      | Register/login per IP per window                    |
 | `WRITE_RATE_LIMIT_MAX`   | `30`                      | New requests, offers, tasks and uploads per IP/hour |
-| `UPLOAD_DIR`             | `uploads`                 | Image storage directory (must be persistent)        |
 | `TIME_ZONE`              | `Asia/Jerusalem`          | Used to match task days with available weekdays     |
 
 ## Project structure
@@ -206,7 +205,7 @@ from VolunteerHub records.
   public responses.
 - Helmet headers, CORS allowlist, 100 KB JSON limit, global/auth/write rate limits.
 - Uploads: images only, detected from file bytes (the client's type and name are ignored), 5 MB,
-  random file names, served only through a permission-checked endpoint with `nosniff`.
+  stored in the database, served only through a permission-checked endpoint with `nosniff`.
 - Database CHECK constraints and partial unique indexes back the main rules.
 - Generic 500 responses; details go to the server log only. Logs never contain bodies or tokens.
 
@@ -215,6 +214,7 @@ from VolunteerHub records.
 - Access tokens cannot be revoked before they expire, except by blocking the account.
 - Rate limits are in-memory, suitable for a single server instance.
 - Notifications are in-app only (no email or reminders).
-- Uploaded files are stored on local disk; production hosting needs a persistent disk.
+- Uploaded images are stored in the database (`MediaAttachment.data`), so they survive
+  redeploys; they count toward the database size.
 - Accepted offers cannot be withdrawn by the volunteer; the owner can cancel the request.
 - Organizations, coordinators, attendance tracking and waitlists are out of scope.

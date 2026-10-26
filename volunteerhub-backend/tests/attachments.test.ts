@@ -52,6 +52,12 @@ describe('request images', () => {
     expect(file.status).toBe(200);
     expect(file.headers['content-type']).toBe('image/png');
     expect(file.headers['x-content-type-options']).toBe('nosniff');
+    expect(Buffer.from(file.body as Buffer).equals(PNG)).toBe(true);
+
+    // The image is stored in the database, and lists never include the bytes.
+    const stored = await testPrisma().mediaAttachment.findFirstOrThrow();
+    expect(Buffer.from(stored.data).equals(PNG)).toBe(true);
+    expect(res.body.data).not.toHaveProperty('data');
   });
 
   it('rejects non-images (even with an image name) and other users', async () => {

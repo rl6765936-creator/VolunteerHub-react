@@ -1,6 +1,3 @@
-import { mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import type { Express } from 'express';
 import request from 'supertest';
 import { createApp } from '../../src/app.js';
@@ -15,8 +12,6 @@ import { assertTestDatabase, TEST_DATABASE_URL } from './testDatabase.js';
 export const TEST_JWT_SECRET = 'test-secret-that-is-at-least-32-characters-long';
 export const TEST_PASSWORD = 'Password123!';
 
-const uploadDir = mkdtempSync(path.join(tmpdir(), 'volunteerhub-test-uploads-'));
-
 export function testEnv(overrides: Record<string, string> = {}): Env {
   return loadEnv({
     NODE_ENV: 'test',
@@ -25,7 +20,6 @@ export function testEnv(overrides: Record<string, string> = {}): Env {
     RATE_LIMIT_MAX: '100000',
     AUTH_RATE_LIMIT_MAX: '100000',
     WRITE_RATE_LIMIT_MAX: '100000',
-    UPLOAD_DIR: uploadDir,
     ...overrides,
   });
 }
