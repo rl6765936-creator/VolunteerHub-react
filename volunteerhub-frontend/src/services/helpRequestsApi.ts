@@ -9,9 +9,12 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-/** Public list: approved, open requests only (the server's default). */
-const getHelpRequests = async (): Promise<HelpRequestsResponse> => {
-  const response = await fetch(`${API_URL}/requests`);
+/** Public list: approved requests in the chosen status, 20 per page. */
+const getHelpRequests = async (status: string, page: number): Promise<HelpRequestsResponse> => {
+  // Unlike VoiceUp there is no "all" option: the server lists one status at a time (default OPEN).
+  const params = new URLSearchParams({ status, page: String(page), pageSize: "20" });
+
+  const response = await fetch(`${API_URL}/requests?${params}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch help requests");

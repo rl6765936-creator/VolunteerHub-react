@@ -37,7 +37,6 @@ const approveHelpRequest = async (
   return response.json();
 };
 
-/** reason: 5-500 characters (server rule). */
 const rejectHelpRequest = async (
   requestId: string,
   reason: string,

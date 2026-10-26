@@ -1,5 +1,4 @@
-// Types of the VolunteerHub help-request API (GET/POST/PATCH /api/requests, /api/users/me/requests,
-// /api/admin/requests). Dates arrive as ISO strings.
+
 
 export type ModerationStatus = "PENDING_REVIEW" | "APPROVED" | "REJECTED";
 
@@ -12,13 +11,12 @@ export type PaginationMeta = {
   totalPages: number;
 };
 
-/** List item. Never contains the address or contact details. */
 export type HelpRequest = {
   id: string;
   title: string;
   description: string;
   region: string;
-  neededBy: string | null;
+  neededBy: string | null; 
 
   category: {
     id: string;
@@ -32,7 +30,6 @@ export type HelpRequest = {
   };
 
   moderationStatus: ModerationStatus;
-  /** Approved once, edited, and now waiting for review again. */
   underReModeration: boolean;
   status: HelpRequestStatus;
 
@@ -43,7 +40,6 @@ export type HelpRequest = {
   activeOfferCount: number;
   imageCount: number;
 
-  /** Only in the owner's list and the admin list. */
   rejectionReason?: string | null;
 };
 
@@ -52,7 +48,6 @@ export type HelpRequestsResponse = {
   meta: PaginationMeta;
 };
 
-/** GET /api/requests/:id. privateDetails is null unless the viewer is the owner, an admin or the accepted volunteer. */
 export type HelpRequestDetail = HelpRequest & {
   completedAt: string | null;
   cancelledAt: string | null;
@@ -95,11 +90,9 @@ export type CreateHelpRequestRequest = {
   categoryId: string;
   region: string;
   addressDetails?: string;
-  /** ISO date-time, must be in the future. */
   neededBy?: string;
 };
 
-/** PATCH body. addressDetails: null clears the address. */
 export type UpdateHelpRequestRequest = {
   title?: string;
   description?: string;
@@ -115,7 +108,6 @@ export type HelpRequestAttachment = {
   mimeType: string;
   sizeBytes: number;
   createdAt: string;
-  /** Relative to the API origin, e.g. /api/attachments/:id/file */
   url: string;
 };
 

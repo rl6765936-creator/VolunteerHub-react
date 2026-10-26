@@ -8,10 +8,8 @@ const ProtectedRoute = ({ requiredRole }: { requiredRole?: "ADMIN" }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // After a page refresh the token exists but the user is still loading; without this an
-  // admin would be sent to "/" before their role is known.
   if (requiredRole && isLoading) {
-    return <p>בודק הרשאות...</p>;
+    return <p className="vh-state">בודק הרשאות...</p>;
   }
 
   if (requiredRole && user?.role !== requiredRole) {

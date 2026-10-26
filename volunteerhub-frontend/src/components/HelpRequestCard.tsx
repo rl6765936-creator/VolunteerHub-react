@@ -6,6 +6,8 @@ import useAuth from "../hooks/useAuth";
 import { useCompleteHelpRequest } from "../hooks/useCompleteHelpRequest";
 import OfferHelp from "./OfferHelp";
 import RequestOffers from "./RequestOffers";
+import HeartIcon from "../design/HeartIcon";
+import RequestLadder from "../design/RequestLadder";
 
 const getModerationLabel = (status: ModerationStatus) => {
   switch (status) {
@@ -15,6 +17,8 @@ const getModerationLabel = (status: ModerationStatus) => {
       return "מאושר";
     case "REJECTED":
       return "נדחה";
+    default:
+      return status;
   }
 };
 
@@ -31,6 +35,12 @@ const getStatusLabel = (status: HelpRequestStatus) => {
   }
 };
 
+/** Design only: a chip colour per status / moderation state. */
+const statusChip = (status: HelpRequestStatus) =>
+  status === "OPEN" ? "vh-chip vh-chip--teal" : status === "IN_PROGRESS" ? "vh-chip vh-chip--amber" : status === "COMPLETED" ? "vh-chip vh-chip--mint" : "vh-chip";
+const moderationChip = (status: ModerationStatus) =>
+  status === "APPROVED" ? "vh-chip vh-chip--mint" : status === "REJECTED" ? "vh-chip vh-chip--pink" : "vh-chip vh-chip--lilac";
+
 type HelpRequestCardProps = {
   request: HelpRequest;
   canEdit?: boolean;
@@ -46,75 +56,93 @@ const HelpRequestCard = ({ request, canEdit = false }: HelpRequestCardProps) => 
   const isOpenForOffers = request.moderationStatus === "APPROVED" && request.status === "OPEN";
 
   return (
-    <article>
-      <h2>{request.title}</h2>
-      <p>{request.description}</p>
-      <p>קטגוריה: {request.category.name}</p>
-      <p>אזור: {request.region}</p>
+    <article className="vh-card">
+      <HeartIcon size={40} color="#E3304C" className="vh-card__peek" />
+
+      <div className="vh-card__body">
+      {canEdit && <RequestLadder request={request} />}
+
+      <div className="vh-card__main">
+      <div className="vh-card__row">
+        <span className="vh-chip vh-chip--pink">קטגוריה: {request.category.name}</span>
+        <span className={statusChip(request.status)}>סטטוס הבקשה: {getStatusLabel(request.status)}</span>
+        {canEdit && (
+          <span className={moderationChip(request.moderationStatus)}>
+            סטטוס אישור: {getModerationLabel(request.moderationStatus)}
+            {request.underReModeration && " (נערכה אחרי אישור, ממתינה לבדיקה חוזרת)"}
+          </span>
+        )}
+      </div>
+
+      <h2 className="vh-card__title">{request.title}</h2>
+      <p className="vh-card__text">{request.description}</p>
+
+      <p className="vh-meta">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
+        אזור: {request.region}
+      </p>
       {request.neededBy && (
-        <p>נדרש עד: {new Date(request.neededBy).toLocaleString("he-IL")}</p>
+        <p className="vh-meta">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="4" /><path d="M8 3v4M16 3v4M3 10h18" /></svg>
+          נדרש עד: {new Date(request.neededBy).toLocaleString("he-IL")}
+        </p>
       )}
-      <p>מבקש/ת: {request.owner.name}</p>
-      <p>סטטוס הבקשה: {getStatusLabel(request.status)}</p>
-      <p>הצעות עזרה פעילות: {request.activeOfferCount}</p>
+
+      <div className="vh-card__row vh-card__row--between">
+        <p className="vh-meta">מבקש/ת: {request.owner.name}</p>
+        <span className={request.activeOfferCount > 0 ? "vh-chip vh-chip--heart" : "vh-chip"}>
+          <HeartIcon size={14} />
+          הצעות עזרה פעילות: {request.activeOfferCount}
+        </span>
+      </div>
 
       {request.imageCount > 0 && <HelpRequestImages requestId={request.id} />}
 
-      {/* Volunteers: offer help (like the 👍 / comments of VoiceUp's IssueCard). */}
+      <div className="vh-card__actions">
       {!isOwner && isOpenForOffers && (
-        <>
           <button
             type="button"
+            className={showOfferForm ? "vh-btn vh-btn--plain vh-btn--small" : "vh-btn vh-btn--heart vh-btn--small"}
             aria-expanded={showOfferForm}
             onClick={() => setShowOfferForm((prev) => !prev)}
           >
-            {showOfferForm ? "סגירה" : "🙋 הצעת עזרה"}
+            {showOfferForm ? "סגירה" : <><HeartIcon size={16} /> הצעת עזרה</>}
           </button>
-
-          {showOfferForm && <OfferHelp requestId={request.id} />}
-        </>
       )}
-
-      {/* Owner: see the offers, accept one, then mark the request as completed. */}
       {canEdit && request.moderationStatus === "APPROVED" && (
-        <>
           <button
             type="button"
+            className="vh-btn vh-btn--cloud vh-btn--small"
             aria-expanded={showOffers}
             onClick={() => setShowOffers((prev) => !prev)}
           >
             {showOffers ? "הסתר הצעות" : "הצג הצעות עזרה"}
           </button>
-
-          {showOffers && <RequestOffers requestId={request.id} canAccept={request.status === "OPEN"} />}
-        </>
       )}
-
       {canEdit && request.status === "IN_PROGRESS" && (
-        <button type="button" disabled={isCompleting} onClick={() => complete(request.id)}>
-          ✅ סימון הבקשה כהושלמה
+        <button type="button" className="vh-btn vh-btn--heart vh-btn--small" disabled={isCompleting} onClick={() => complete(request.id)}>
+          סימון הבקשה כהושלמה
         </button>
       )}
-      {completeFailed && <p role="alert">העדכון נכשל. נסו שוב.</p>}
-
-      {/* The server allows editing while the request is OPEN, in any moderation state. */}
       {canEdit && request.status === "OPEN" && (
-        <Link to={`/requests/${request.id}/edit`}>עריכת בקשה</Link>
+        <Link to={`/requests/${request.id}/edit`} className="vh-btn vh-btn--soft vh-btn--small">עריכת בקשה</Link>
       )}
+      </div>
+
+      {!isOwner && isOpenForOffers && showOfferForm && <OfferHelp requestId={request.id} />}
+      {canEdit && request.moderationStatus === "APPROVED" && showOffers && (
+        <RequestOffers requestId={request.id} canAccept={request.status === "OPEN"} />
+      )}
+      {completeFailed && <p className="vh-alert" role="alert">העדכון נכשל. נסו שוב.</p>}
 
       {request.moderationStatus === "REJECTED" && request.rejectionReason && (
-        <section>
-          <strong>❌ הבקשה נדחתה</strong>
+        <section className="vh-rejected">
+          <strong>הבקשה נדחתה</strong>
           <p>הסיבה: {request.rejectionReason}</p>
         </section>
       )}
-
-      {canEdit && (
-        <p>
-          סטטוס אישור: {getModerationLabel(request.moderationStatus)}
-          {request.underReModeration && " (נערכה אחרי אישור, ממתינה לבדיקה חוזרת)"}
-        </p>
-      )}
+      </div>
+      </div>
     </article>
   );
 };

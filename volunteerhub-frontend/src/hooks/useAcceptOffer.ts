@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { acceptOffer } from "../services/offersApi";
 import useAuth from "./useAuth";
 
-/** The owner accepts one offer; the request moves to IN_PROGRESS. */
 export function useAcceptOffer(requestId: string) {
   const queryClient = useQueryClient();
   const { token } = useAuth();

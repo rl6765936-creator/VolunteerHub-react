@@ -7,18 +7,17 @@ type Props = {
   requestId: string;
 };
 
-/** Adapted from VoiceUp's IssueComments form: a volunteer writes how they can help. */
 export default function OfferHelp({ requestId }: Props) {
   const [message, setMessage] = useState("");
   const { token } = useAuth();
   const createOfferMutation = useCreateOffer(requestId);
 
   if (!token) {
-    return <Link to="/login">יש להתחבר כדי להציע עזרה.</Link>;
+    return <Link to="/login" className="vh-btn vh-btn--soft vh-btn--small">יש להתחבר כדי להציע עזרה.</Link>;
   }
 
   if (createOfferMutation.isSuccess) {
-    return <p>✅ ההצעה נשלחה. המבקש/ת יקבלו הודעה.</p>;
+    return <p className="vh-success" role="status">ההצעה נשלחה. המבקש/ת יקבלו הודעה.</p>;
   }
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -29,8 +28,9 @@ export default function OfferHelp({ requestId }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="vh-offer-form" onSubmit={handleSubmit}>
       <textarea
+        className="vh-input"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="איך תוכל/י לעזור?"
@@ -42,13 +42,14 @@ export default function OfferHelp({ requestId }: Props) {
 
       <button
         type="submit"
+        className="vh-btn vh-btn--heart vh-btn--small"
         disabled={message.trim().length < 5 || createOfferMutation.isPending}
       >
         {createOfferMutation.isPending ? "שולח..." : "שליחת הצעת עזרה"}
       </button>
 
       {createOfferMutation.isError && (
-        <p role="alert">השליחה נכשלה (ייתכן שכבר הצעת עזרה לבקשה זו).</p>
+        <p className="vh-alert" role="alert">השליחה נכשלה (ייתכן שכבר הצעת עזרה לבקשה זו).</p>
       )}
     </form>
   );

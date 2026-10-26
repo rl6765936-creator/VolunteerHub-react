@@ -13,11 +13,6 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-/**
- * Loads one image file with the viewer's token (images of a request under review are not
- * public). Returns a data: URL, so there is no object URL to revoke and no state set inside
- * an effect (VoiceUp's IssueImage did that with useEffect + useState).
- */
 const useHelpRequestImageFile = (url: string) => {
   const { token } = useAuth();
 
